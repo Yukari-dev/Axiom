@@ -1,13 +1,13 @@
 #include "device.hpp"
-#include <iostream>
 #include <stdexcept>
 #include <map>
+#include <set>
 #include <utility>
 #include <vector>
 
 namespace Axiom{
 
-Device::Device(const Instance& instance) : m_instance(instance){
+Device::Device(const Instance& instance, VkSurfaceKHR surface) : m_instance(instance), m_surface(surface){
   PickPhysicalDevice();
   CreateLogicalDevice();
 }
@@ -42,14 +42,25 @@ void Device::CreateLogicalDevice(){
   queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
   queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
   queueCreateInfo.queueCount = 1;
+  std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+  std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
   float queuePriority = 1.0f;
+  for(uint32_t queueFamily : uniqueQueueFamilies){
+    VkDeviceQueueCreateInfo queueCreateInfo{};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = queueFamily;
+    queueCreateInfo.queueCount = 1;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+    queueCreateInfos.push_back(queueCreateInfo);
+  }
+
   queueCreateInfo.pQueuePriorities = &queuePriority;
 
   VkPhysicalDeviceFeatures deviceFeature{};
   VkDeviceCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  createInfo.pQueueCreateInfos = &queueCreateInfo;
-  createInfo.queueCreateInfoCount = 1;
+  createInfo.pQueueCreateInfos = queueCreateInfos.data();
+  createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
   createInfo.pEnabledFeatures = &deviceFeature;
   createInfo.enabledExtensionCount = 0;
   
@@ -60,6 +71,7 @@ void Device::CreateLogicalDevice(){
   if(result != VK_SUCCESS)
     throw std::runtime_error("Failed to create Logical Device");
   vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
+  vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentQueue);
 }
 
 int Device::RateDeviceSuitabilty(VkPhysicalDevice device){
@@ -88,8 +100,12 @@ QueueFamilyIndices Device::FindQueueFamilies(VkPhysicalDevice device){
   vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
   int i = 0;
   for(const auto& family : queueFamilies){
+    VkBool32 presentSupport = false;
+    vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_surface, &presentSupport);
     if(family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
       indices.graphicsFamily = i;
+    if(presentSupport)
+      indices.presentFamily = i;
     if(indices.IsComplete())
       break;
     i++;
@@ -103,6 +119,5 @@ bool Device::IsDeviceSuitable(VkPhysicalDevice device){
 
   return indices.IsComplete();
 }
-
 
 }

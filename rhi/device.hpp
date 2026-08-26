@@ -8,13 +8,14 @@ namespace Axiom{
 
 struct QueueFamilyIndices{
   std::optional<uint32_t> graphicsFamily;
+  std::optional<uint32_t> presentFamily;
 
-  bool IsComplete() { return graphicsFamily.has_value(); }
+  bool IsComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
 };
 
 class Device{
 public:
-  Device(const Instance& instance);
+  Device(const Instance& instance, VkSurfaceKHR surface);
   ~Device();
 
 private:
@@ -27,6 +28,8 @@ private:
   VkDevice m_device = VK_NULL_HANDLE;
   VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
   VkQueue m_graphicsQueue;
+  VkQueue m_presentQueue;
+  VkSurfaceKHR m_surface;
   Instance m_instance;
 };
 

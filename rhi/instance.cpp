@@ -99,8 +99,6 @@ void Instance::Create(){
   VkResult result = vkCreateInstance(&createInfo, nullptr, &m_instance);
   if (result != VK_SUCCESS)
     throw std::runtime_error("Failed to create Instance.");
-
-  std::cout << "Instance is created!.\n";
 }
 
 void Instance::SetupDebugMessenger(){
