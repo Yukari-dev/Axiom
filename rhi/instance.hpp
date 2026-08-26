@@ -9,6 +9,9 @@ public:
   Instance();
   ~Instance();
 
+  VkInstance GetInstance() const { return m_instance; }
+  const std::vector<const char *>& GetValidationLayers() const { return m_validationLayers; }
+  bool IsValidationEnabled() const { return m_enableValidationLayers; }
 private:
   void Create();
   void SetupDebugMessenger();
