@@ -2,6 +2,7 @@
 #include "instance.hpp"
 #include "device.hpp"
 #include "surface.hpp"
+#include "swapchain.hpp"
 
 int main(int ac, char **av) {
   Axiom::Init();
@@ -11,6 +12,7 @@ int main(int ac, char **av) {
   Axiom::Instance instance;
   Axiom::Surface surface(instance.GetInstance(), window.GetHandler());
   Axiom::Device device(instance, surface.GetSurface());
+  Axiom::SwapChain swapChain(device.GetPhysicalDevice(), device.GetDevice(), surface.GetSurface(), window.GetHandler());
 
   while (!window.ShouldClose()){
     window.PollEvents();

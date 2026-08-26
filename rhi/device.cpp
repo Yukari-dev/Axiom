@@ -62,7 +62,8 @@ void Device::CreateLogicalDevice(){
   createInfo.pQueueCreateInfos = queueCreateInfos.data();
   createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
   createInfo.pEnabledFeatures = &deviceFeature;
-  createInfo.enabledExtensionCount = 0;
+  createInfo.enabledExtensionCount = static_cast<uint32_t>(m_deviceExtensions.size());
+  createInfo.ppEnabledExtensionNames = m_deviceExtensions.data();
   
   createInfo.ppEnabledLayerNames = nullptr;
   createInfo.enabledLayerCount = 0;
@@ -114,10 +115,46 @@ QueueFamilyIndices Device::FindQueueFamilies(VkPhysicalDevice device){
   return indices;
 }
 
+bool Device::CheckDeviceExtensionSupport(VkPhysicalDevice device){
+  uint32_t extensionCount = 0;
+  vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+  std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+  vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+  std::set<std::string> requiredExtension(m_deviceExtensions.begin(), m_deviceExtensions.end());
+  for(const auto& extension : availableExtensions)
+    requiredExtension.insert(extension.extensionName);
+  return !requiredExtension.empty();
+}
+
+SwapChainSupportDetails Device::QuerySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface){
+  SwapChainSupportDetails details;
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+  uint32_t formatCount = 0;
+  vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+  if(formatCount != 0){
+    details.formats.resize(formatCount);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+  }
+
+  uint32_t presentModeCount = 0;
+  vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+  if(presentModeCount != 0){
+    details.presentModes.resize(presentModeCount);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+  }
+  return details;
+}
+
 bool Device::IsDeviceSuitable(VkPhysicalDevice device){
   QueueFamilyIndices indices = FindQueueFamilies(device);
-
-  return indices.IsComplete();
+  bool extensionSupport = CheckDeviceExtensionSupport(device);
+  bool swapChainAdequate = false;
+  if(extensionSupport){
+    SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(device, m_surface);
+    swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+  }
+  return indices.IsComplete() && extensionSupport && swapChainAdequate;
 }
 
 }
