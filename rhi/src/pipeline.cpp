@@ -1,5 +1,6 @@
 #include "pipeline.hpp"
 #include "shaderModule.hpp"
+#include "vertex.hpp"
 #include <stdexcept>
 
 namespace Axiom{
@@ -33,10 +34,13 @@ void Pipeline::Create(VkExtent2D extent, VkRenderPass renderPass){
 
   VkPipelineVertexInputStateCreateInfo vertInputInfo{};
   vertInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;;
-  vertInputInfo.vertexAttributeDescriptionCount = 0;
-  vertInputInfo.pVertexAttributeDescriptions = nullptr;
-  vertInputInfo.vertexBindingDescriptionCount = 0;
-  vertInputInfo.pVertexBindingDescriptions = nullptr;
+
+  auto bindingDescription = Vertex::GetBindingDescription();
+  auto attributeDescriptions = Vertex::GetAttributeDescriptions();
+  vertInputInfo.vertexBindingDescriptionCount = 1;
+  vertInputInfo.pVertexBindingDescriptions = &bindingDescription;
+  vertInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+  vertInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
   VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
   inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

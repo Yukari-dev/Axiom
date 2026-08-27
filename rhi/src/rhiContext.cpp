@@ -1,7 +1,8 @@
 #include "rhiContext.hpp"
 #include "syncObjects.hpp"
-#include <iostream>
+#include "vertex.hpp"
 #include <stdexcept>
+#include <vector>
 
 namespace Axiom{
 
@@ -29,6 +30,19 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
     m_device->GetDevice(), 
     static_cast<uint32_t>(m_swapChain->GetImageViews().size())
   );
+  std::vector<Vertex> vertices = {
+    {{ 0.0f,-0.5f}},
+    {{ 0.5f, 0.5f}},
+    {{-0.5f, 0.5f}}
+  };
+  VkDeviceSize size = sizeof(vertices[0]) * vertices.size();
+  m_vertexBuffer = std::make_unique<Buffer>(
+    m_device->GetPhysicalDevice(), m_device->GetDevice(),
+    size,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
+  m_vertexBuffer->CopyData(vertices.data(), size);
 }
 
 void RhiContext::DrawFrame(){
@@ -57,6 +71,7 @@ void RhiContext::DrawFrame(){
   m_commandBuffer->BindPipeline(m_pipeline->GetPipeline());
   m_commandBuffer->SetViewport(m_swapChain->GetExtent());
   m_commandBuffer->SetScissor(m_swapChain->GetExtent());
+  m_commandBuffer->BindVertexBuffer(m_vertexBuffer->GetBuffer());
   m_commandBuffer->Draw(3);
   m_commandBuffer->EndRenderPass();
   m_commandBuffer->End();

@@ -1,4 +1,5 @@
 #pragma once
+#include "buffer.hpp"
 #include "commandPool.hpp"
 #include "device.hpp"
 #include "framebuffer.hpp"
@@ -35,6 +36,7 @@ private:
   std::unique_ptr<CommandPool> m_commandPool{nullptr};
   std::unique_ptr<CommandBuffer> m_commandBuffer{nullptr};
   std::unique_ptr<SyncObjects> m_syncObjects{nullptr};
+  std::unique_ptr<Buffer> m_vertexBuffer{nullptr};
 };
 
 }

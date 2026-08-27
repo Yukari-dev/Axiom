@@ -12,6 +12,7 @@ add_library(
   src/commandPool.cpp
   src/commandBuffer.cpp
   src/syncObjects.cpp
+  src/buffer.cpp
 )
 target_include_directories(axiom_rhi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 find_package(Vulkan REQUIRED)

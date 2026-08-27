@@ -11,6 +11,7 @@ public:
   void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, VkExtent2D extent);
   void BindPipeline(VkPipeline pipeline);
   void Draw(uint32_t vertexCount);
+  void BindVertexBuffer(VkBuffer buffer);
   void SetViewport(VkExtent2D extent);
   void SetScissor(VkExtent2D extent);
   void EndRenderPass();

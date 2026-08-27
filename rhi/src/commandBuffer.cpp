@@ -47,6 +47,12 @@ void CommandBuffer::Draw(uint32_t vertexCount){
   vkCmdDraw(m_commandBuffer, vertexCount, 1, 0, 0);
 }
 
+void CommandBuffer::BindVertexBuffer(VkBuffer buffer){
+  VkBuffer buffers[] = {buffer};
+  VkDeviceSize offsets[] = {0};
+  vkCmdBindVertexBuffers(m_commandBuffer, 0, 1, buffers, offsets);
+}
+
 void CommandBuffer::SetViewport(VkExtent2D extent) {
   VkViewport viewport{};
   viewport.x = 0.0f;
