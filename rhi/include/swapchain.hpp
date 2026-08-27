@@ -11,6 +11,8 @@ public:
   ~SwapChain();
 
   VkSwapchainKHR GetSwapChain() const { return m_swapChain; }
+  VkFormat GetFormat() const { return m_swapChainFormat; }
+  VkExtent2D GetExtent() const { return m_swapChainExtent; }
 private:
   void Create();
   void CreateImageViews();
