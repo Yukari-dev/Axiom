@@ -3,8 +3,9 @@
 #include "device.hpp"
 #include "surface.hpp"
 #include "swapchain.hpp"
-#include "pipeline.hpp"
 #include "renderPass.hpp"
+#include "pipeline.hpp"
+#include "framebuffer.hpp"
 
 int main(int ac, char **av) {
   Axiom::Init();
@@ -17,6 +18,7 @@ int main(int ac, char **av) {
   Axiom::SwapChain swapChain(device.GetPhysicalDevice(), device.GetDevice(), surface.GetSurface(), window.GetHandler());
   Axiom::RenderPass renderPass(device.GetDevice(), swapChain.GetFormat());
   Axiom::Pipeline pipeline(device.GetDevice(), swapChain.GetExtent(), renderPass.GetRenderPass());
+  Axiom::Framebuffer framebuffer(device.GetDevice(), swapChain.GetImageViews(), swapChain.GetExtent(), renderPass.GetRenderPass());
 
   while (!window.ShouldClose()){
     window.PollEvents();

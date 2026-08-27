@@ -7,6 +7,7 @@ add_library(
   src/shaderModule.cpp
   src/pipeline.cpp
   src/renderPass.cpp
+  src/framebuffer.cpp
 )
 target_include_directories(axiom_rhi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 find_package(Vulkan REQUIRED)
