@@ -1,9 +1,13 @@
 #include "rhiContext.hpp"
 #include "syncObjects.hpp"
+#include <iostream>
+#include <stdexcept>
 
 namespace Axiom{
 
-RhiContext::RhiContext(GLFWwindow *window, int width, int height){
+RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(window){
+  glfwSetWindowUserPointer(window, this);
+  glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
   m_instance = std::make_unique<Instance>();
   m_surface = std::make_unique<Surface>(m_instance->GetInstance(), window);
   m_device = std::make_unique<Device>(m_instance->GetInstance(), m_surface->GetSurface());
@@ -33,10 +37,16 @@ void RhiContext::DrawFrame(){
   vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
   vkResetFences(device, 1, &inFlightFence);
   uint32_t imageIndex;
-  vkAcquireNextImageKHR(
+  VkResult result = vkAcquireNextImageKHR(
     device, m_swapChain->GetSwapChain(), UINT64_MAX, m_syncObjects->GetImageAvailable(),
     VK_NULL_HANDLE, &imageIndex
   );
+
+  if(result == VK_ERROR_OUT_OF_DATE_KHR){
+    RecreateSwapChain();
+    return;
+  } else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+    throw std::runtime_error("Failed to acquire swap chain image.");
 
   vkResetCommandBuffer(m_commandBuffer->GetHandler(), 0);
   m_commandBuffer->Begin();
@@ -45,6 +55,8 @@ void RhiContext::DrawFrame(){
     m_swapChain->GetExtent()
   );
   m_commandBuffer->BindPipeline(m_pipeline->GetPipeline());
+  m_commandBuffer->SetViewport(m_swapChain->GetExtent());
+  m_commandBuffer->SetScissor(m_swapChain->GetExtent());
   m_commandBuffer->Draw(3);
   m_commandBuffer->EndRenderPass();
   m_commandBuffer->End();
@@ -64,8 +76,8 @@ void RhiContext::DrawFrame(){
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = signalSemaphores;
 
-  VkResult result = vkQueueSubmit(m_device->GetGraphicsQueue(), 1, &submitInfo, inFlightFence);
-  if(result != VK_SUCCESS)
+  VkResult qResult = vkQueueSubmit(m_device->GetGraphicsQueue(), 1, &submitInfo, inFlightFence);
+  if(qResult != VK_SUCCESS)
     throw std::runtime_error("Failed to submit draw command buffer");
 
   VkPresentInfoKHR presentInfo{};
@@ -77,7 +89,38 @@ void RhiContext::DrawFrame(){
   presentInfo.pSwapchains = swapchains;
   presentInfo.pImageIndices = &imageIndex;
 
-  vkQueuePresentKHR(m_device->GetGraphicsQueue(), &presentInfo);
+  result = vkQueuePresentKHR(m_device->GetGraphicsQueue(), &presentInfo);
+  if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_framebufferResized){
+    m_framebufferResized = false;
+    RecreateSwapChain();
+  } else if (result != VK_SUCCESS)
+    throw std::runtime_error("Failed to present swap chain image");
+}
+
+void RhiContext::RecreateSwapChain(){
+  int width = 0, height = 0;
+  glfwGetFramebufferSize(m_window, &width, &height);
+  while (width == 0 || height == 0){
+    glfwGetFramebufferSize(m_window, &width, &height);
+    glfwWaitEvents();
+  }
+
+  vkDeviceWaitIdle(m_device->GetDevice());
+
+  m_framebuffer.reset();
+  m_swapChain.reset();
+
+  m_swapChain = std::make_unique<SwapChain>(
+    m_device->GetPhysicalDevice(), m_device->GetDevice(), m_surface->GetSurface(), m_window 
+  );
+  m_framebuffer = std::make_unique<Framebuffer>(
+    m_device->GetDevice(), m_swapChain->GetImageViews(), m_swapChain->GetExtent(), m_renderPass->GetRenderPass()
+  );
+}
+
+void RhiContext::FramebufferResizeCallback(GLFWwindow *window, int width, int height){
+  auto* self = reinterpret_cast<RhiContext*>(glfwGetWindowUserPointer(window));
+  self->m_framebufferResized = true;
 }
 
 }

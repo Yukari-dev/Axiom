@@ -20,6 +20,11 @@ public:
 
   void DrawFrame();
 private:
+  static void FramebufferResizeCallback(GLFWwindow *window, int width, int height);
+  void RecreateSwapChain();
+private:
+  GLFWwindow *m_window{nullptr};
+  bool m_framebufferResized{false};
   std::unique_ptr<Instance> m_instance{nullptr};
   std::unique_ptr<Surface> m_surface{nullptr};
   std::unique_ptr<Device> m_device{nullptr};

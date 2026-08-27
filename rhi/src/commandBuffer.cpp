@@ -47,6 +47,24 @@ void CommandBuffer::Draw(uint32_t vertexCount){
   vkCmdDraw(m_commandBuffer, vertexCount, 1, 0, 0);
 }
 
+void CommandBuffer::SetViewport(VkExtent2D extent) {
+  VkViewport viewport{};
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.width = static_cast<float>(extent.width);
+  viewport.height = static_cast<float>(extent.height);
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
+}
+
+void CommandBuffer::SetScissor(VkExtent2D extent) {
+  VkRect2D scissor{};
+  scissor.offset = {0, 0};
+  scissor.extent = extent;
+  vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
+}
+
 void CommandBuffer::EndRenderPass(){
   vkCmdEndRenderPass(m_commandBuffer);
 }

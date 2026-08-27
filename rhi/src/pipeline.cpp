@@ -107,7 +107,7 @@ void Pipeline::Create(VkExtent2D extent, VkRenderPass renderPass){
 
   std::vector<VkDynamicState> dynamicStates = {
     VK_DYNAMIC_STATE_VIEWPORT,
-    VK_DYNAMIC_STATE_LINE_WIDTH
+    VK_DYNAMIC_STATE_SCISSOR
   };
 
   VkPipelineDynamicStateCreateInfo dynamicState{};
@@ -139,6 +139,7 @@ void Pipeline::Create(VkExtent2D extent, VkRenderPass renderPass){
   pipelineInfo.layout = m_pipelineLayout;
   pipelineInfo.renderPass = renderPass;
   pipelineInfo.subpass = 0;
+  pipelineInfo.pDynamicState = &dynamicState;
 
   VkResult gResult = vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline);
   if(gResult != VK_SUCCESS)
