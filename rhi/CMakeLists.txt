@@ -1,5 +1,6 @@
 add_library(
   axiom_rhi STATIC 
+  src/rhiContext.cpp
   src/instance.cpp
   src/device.cpp
   src/surface.cpp
@@ -8,6 +9,9 @@ add_library(
   src/pipeline.cpp
   src/renderPass.cpp
   src/framebuffer.cpp
+  src/commandPool.cpp
+  src/commandBuffer.cpp
+  src/syncObjects.cpp
 )
 target_include_directories(axiom_rhi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 find_package(Vulkan REQUIRED)

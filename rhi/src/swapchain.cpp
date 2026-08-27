@@ -1,6 +1,5 @@
 #include "swapchain.hpp"
 #include <GLFW/glfw3.h>
-#include <limits>
 #include <optional>
 #include <stdexcept>
 
@@ -168,7 +167,7 @@ VkPresentModeKHR SwapChain::ChooseSwapChainPresentMode(const std::vector<VkPrese
 }
 
 VkExtent2D SwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities){
-  if(capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+  if(capabilities.currentExtent.width != UINT32_MAX)
     return capabilities.currentExtent;
   else{
     int width, height;

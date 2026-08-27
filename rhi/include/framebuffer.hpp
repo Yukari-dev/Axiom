@@ -8,6 +8,8 @@ class Framebuffer{
 public:
   Framebuffer(VkDevice device, const std::vector<VkImageView>& imageViews, const VkExtent2D& extent, VkRenderPass renderPass);
   ~Framebuffer();
+
+  VkFramebuffer GetFramebuffer(size_t index) const { return m_framebuffers[index]; }
 private:
   void Create(const std::vector<VkImageView>& imageViews, const VkExtent2D& extent, VkRenderPass renderPass);
 private:

@@ -7,7 +7,7 @@
 
 namespace Axiom{
 
-Device::Device(const Instance& instance, VkSurfaceKHR surface) : m_instance(instance), m_surface(surface){
+Device::Device(const VkInstance& instance, VkSurfaceKHR surface) : m_instance(instance), m_surface(surface){
   PickPhysicalDevice();
   CreateLogicalDevice();
 }
@@ -19,11 +19,11 @@ Device::~Device(){
 
 void Device::PickPhysicalDevice(){
   uint32_t deviceCount = 0;
-  vkEnumeratePhysicalDevices(m_instance.GetInstance(), &deviceCount, nullptr);
+  vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
   if(deviceCount == 0)
     throw std::runtime_error("Failed to find GPUs with Vulkan Support");
   std::vector<VkPhysicalDevice> devices(deviceCount);
-  vkEnumeratePhysicalDevices(m_instance.GetInstance(), &deviceCount, devices.data());
+  vkEnumeratePhysicalDevices(m_instance, &deviceCount, devices.data());
 
   std::multimap<int, VkPhysicalDevice> candidates;
   for(const auto& device : devices){
@@ -37,13 +37,13 @@ void Device::PickPhysicalDevice(){
 }
 
 void Device::CreateLogicalDevice(){
-  QueueFamilyIndices indices = FindQueueFamilies(m_physicalDevice);
+  m_indices = FindQueueFamilies(m_physicalDevice);
   VkDeviceQueueCreateInfo queueCreateInfo{};
   queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-  queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+  queueCreateInfo.queueFamilyIndex = m_indices.graphicsFamily.value();
   queueCreateInfo.queueCount = 1;
   std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-  std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+  std::set<uint32_t> uniqueQueueFamilies = {m_indices.graphicsFamily.value(), m_indices.presentFamily.value()};
   float queuePriority = 1.0f;
   for(uint32_t queueFamily : uniqueQueueFamilies){
     VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -71,8 +71,8 @@ void Device::CreateLogicalDevice(){
   VkResult result = vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &m_device);
   if(result != VK_SUCCESS)
     throw std::runtime_error("Failed to create Logical Device");
-  vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
-  vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentQueue);
+  vkGetDeviceQueue(m_device, m_indices.graphicsFamily.value(), 0, &m_graphicsQueue);
+  vkGetDeviceQueue(m_device, m_indices.presentFamily.value(), 0, &m_presentQueue);
 }
 
 int Device::RateDeviceSuitabilty(VkPhysicalDevice device){

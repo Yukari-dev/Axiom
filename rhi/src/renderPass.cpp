@@ -31,12 +31,23 @@ void RenderPass::Create(VkFormat swapChainFormat){
   subpass.colorAttachmentCount = 1;
   subpass.pColorAttachments = &colorAttachRef;
 
+  VkSubpassDependency dependency{};
+  dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+  dependency.dstSubpass = 0;
+  dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  dependency.srcAccessMask = 0;
+  dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+
   VkRenderPassCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   info.attachmentCount = 1;
   info.pAttachments = &colorAttachment;
   info.subpassCount = 1;
   info.pSubpasses = &subpass;
+  info.dependencyCount = 1;
+  info.pDependencies = &dependency;
 
   VkResult result = vkCreateRenderPass(m_device, &info, nullptr, &m_renderPass);
   if(result != VK_SUCCESS)

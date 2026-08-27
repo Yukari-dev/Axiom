@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <optional>
 #include <vulkan/vulkan.hpp>
-#include "instance.hpp"
 
 namespace Axiom{
 
@@ -21,13 +20,15 @@ struct SwapChainSupportDetails{
 
 class Device{
 public:
-  Device(const Instance& instance, VkSurfaceKHR surface);
+  Device(const VkInstance& instance, VkSurfaceKHR surface);
   ~Device();
 
   VkPhysicalDevice GetPhysicalDevice() const { return m_physicalDevice; }
   VkDevice GetDevice() const { return m_device; }
 
   VkQueue GetPresentQueue() const { return m_presentQueue; }
+  VkQueue GetGraphicsQueue() const { return m_graphicsQueue; }
+  uint32_t GetGraphicsQueueFamily() const { return m_indices.graphicsFamily.value(); }
 private:
   void PickPhysicalDevice();
   void CreateLogicalDevice();
@@ -42,7 +43,8 @@ private:
   VkQueue m_graphicsQueue;
   VkQueue m_presentQueue;
   VkSurfaceKHR m_surface;
-  Instance m_instance;
+  VkInstance m_instance;
+  QueueFamilyIndices m_indices{0};
   const std::vector<const char *> m_deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
   };

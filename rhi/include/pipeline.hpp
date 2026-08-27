@@ -7,7 +7,8 @@ class Pipeline{
 public:
   Pipeline(VkDevice device, VkExtent2D extent, VkRenderPass renderPass);
   ~Pipeline();
-
+  
+  VkPipeline GetPipeline() const { return m_graphicsPipeline; }
 private:
   void Create(VkExtent2D extent, VkRenderPass renderPass);
 private:
