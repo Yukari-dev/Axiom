@@ -1,6 +1,8 @@
 #pragma once
 #include "buffer.hpp"
 #include "commandPool.hpp"
+#include "descriptorSet.hpp"
+#include "descriptorSetLayout.hpp"
 #include "device.hpp"
 #include "framebuffer.hpp"
 #include "instance.hpp"
@@ -12,8 +14,16 @@
 #include "syncObjects.hpp"
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <glm/glm.hpp>
+#include <vector>
 
 namespace Axiom{
+
+struct UniformBufferObject{
+  alignas(16) glm::mat4 model;
+  alignas(16) glm::mat4 view;
+  alignas(16) glm::mat4 proj;
+};
 
 class RhiContext{
 public:
@@ -39,6 +49,9 @@ private:
   std::unique_ptr<SyncObjects> m_syncObjects{nullptr};
   std::unique_ptr<Buffer> m_vertexBuffer{nullptr};
   std::unique_ptr<Buffer> m_indexBuffer{nullptr};
+  std::unique_ptr<DescriptorSetLayout> m_descriptorSetLayout{nullptr};
+  std::vector<std::unique_ptr<Buffer>> m_uniformBuffers;
+  std::vector<std::unique_ptr<DescriptorSet>> m_descriptorSets;
 };
 
 }

@@ -5,8 +5,9 @@
 
 namespace Axiom{
 
-Pipeline::Pipeline(VkDevice device, VkExtent2D extent, VkRenderPass renderPass) : m_device(device){
-  Create(extent, renderPass);
+Pipeline::Pipeline(VkDevice device, VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout)
+  : m_device(device){
+  Create(extent, renderPass, layout);
 }
 
 Pipeline::~Pipeline(){
@@ -14,7 +15,7 @@ Pipeline::~Pipeline(){
   vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
 }
 
-void Pipeline::Create(VkExtent2D extent, VkRenderPass renderPass){
+void Pipeline::Create(VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout){
   ShaderModule vertModule(std::string(AXIOM_SHADER_DIR) + "triangle.vert.spv", m_device);
   ShaderModule fragModule(std::string(AXIOM_SHADER_DIR) + "triangle.frag.spv", m_device);
 
@@ -121,8 +122,8 @@ void Pipeline::Create(VkExtent2D extent, VkRenderPass renderPass){
 
   VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipelineLayoutInfo.setLayoutCount = 0;
-  pipelineLayoutInfo.pSetLayouts = nullptr;
+  pipelineLayoutInfo.setLayoutCount = 1;
+  pipelineLayoutInfo.pSetLayouts = &layout;
   pipelineLayoutInfo.pushConstantRangeCount = 0;
   pipelineLayoutInfo.pPushConstantRanges = nullptr;
 

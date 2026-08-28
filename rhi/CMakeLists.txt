@@ -13,10 +13,13 @@ add_library(
   src/commandBuffer.cpp
   src/syncObjects.cpp
   src/buffer.cpp
+  src/descriptorSetLayout.cpp
+  src/descriptorSet.cpp
 )
 target_include_directories(axiom_rhi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 find_package(Vulkan REQUIRED)
-target_link_libraries(axiom_rhi PUBLIC Vulkan::Vulkan)
+find_package(glm REQUIRED)
+target_link_libraries(axiom_rhi PUBLIC Vulkan::Vulkan glm::glm)
 
 find_program(GLSLC glslc REQUIRED)
 set(

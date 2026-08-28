@@ -1,8 +1,10 @@
 #include "rhiContext.hpp"
 #include "syncObjects.hpp"
 #include "vertex.hpp"
+#include <chrono>
 #include <stdexcept>
 #include <vector>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Axiom{
 
@@ -18,8 +20,10 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
   m_renderPass = std::make_unique<RenderPass>(
     m_device->GetDevice(), m_swapChain->GetFormat()
   );
+  m_descriptorSetLayout = std::make_unique<DescriptorSetLayout>(m_device->GetDevice());
   m_pipeline = std::make_unique<Pipeline>(
-    m_device->GetDevice(), m_swapChain->GetExtent(), m_renderPass->GetRenderPass()
+    m_device->GetDevice(), m_swapChain->GetExtent(), m_renderPass->GetRenderPass(),
+    m_descriptorSetLayout->GetDescriptorSetLayout()
   );
   m_framebuffer = std::make_unique<Framebuffer>(
     m_device->GetDevice(), m_swapChain->GetImageViews(), m_swapChain->GetExtent(), m_renderPass->GetRenderPass()
@@ -37,8 +41,8 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
     {{-0.5f,  0.5f}}
   };
   std::vector<uint16_t> indices = {
-    0, 1, 2,
-    2, 3, 0
+    0, 2, 1,
+    2, 0, 3
   };
   m_indexCount = static_cast<uint32_t>(indices.size());
   m_vertexBuffer = std::make_unique<Buffer>(
@@ -55,6 +59,22 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
       indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT
     )
   );
+
+  size_t imageCount = m_swapChain->GetImageViews().size();
+  m_uniformBuffers.resize(imageCount);
+  m_descriptorSets.resize(imageCount);
+  for(size_t i = 0; i < imageCount; i++){
+    m_uniformBuffers[i] = std::make_unique<Buffer>(
+      m_device->GetPhysicalDevice(), m_device->GetDevice(),
+      sizeof(UniformBufferObject),
+      VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    );
+    m_descriptorSets[i] = std::make_unique<DescriptorSet>(
+      m_device->GetDevice(), m_descriptorSetLayout->GetDescriptorSetLayout()
+    );
+    m_descriptorSets[i]->UpdateDescriptorSet(*m_uniformBuffers[i], sizeof(UniformBufferObject));
+  }
 }
 
 void RhiContext::DrawFrame(){
@@ -74,6 +94,17 @@ void RhiContext::DrawFrame(){
   } else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
     throw std::runtime_error("Failed to acquire swap chain image.");
 
+  static auto startTime = std::chrono::high_resolution_clock::now();
+  auto currentTime = std::chrono::high_resolution_clock::now();
+  float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+  UniformBufferObject ubo{};
+  ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  ubo.proj = glm::perspective(glm::radians(45.0f), m_swapChain->GetExtent().width / (float)m_swapChain->GetExtent().height, 0.1f, 10.0f);
+  ubo.proj[1][1] *= -1;
+
+  m_uniformBuffers[imageIndex]->CopyData(&ubo, sizeof(ubo));
+
   vkResetCommandBuffer(m_commandBuffer->GetHandler(), 0);
   m_commandBuffer->Begin();
   m_commandBuffer->BeginRenderPass(
@@ -83,6 +114,13 @@ void RhiContext::DrawFrame(){
   m_commandBuffer->BindPipeline(m_pipeline->GetPipeline());
   m_commandBuffer->SetViewport(m_swapChain->GetExtent());
   m_commandBuffer->SetScissor(m_swapChain->GetExtent());
+  
+  VkDescriptorSet currentSet = m_descriptorSets[imageIndex]->GetSet();
+  vkCmdBindDescriptorSets(
+    m_commandBuffer->GetHandler(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+    m_pipeline->GetPipelineLayout(), 0, 1, &currentSet, 0, nullptr
+  );
+
   m_commandBuffer->BindVertexBuffer(m_vertexBuffer->GetBuffer());
   m_commandBuffer->BindIndexBuffer(m_indexBuffer->GetBuffer());
   m_commandBuffer->DrawIndexed(m_indexCount);
