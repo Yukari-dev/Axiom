@@ -1,5 +1,6 @@
 #pragma once
 #include "buffer.hpp"
+#include "texture.hpp"
 #include <vulkan/vulkan.hpp>
 
 namespace Axiom{
@@ -9,7 +10,7 @@ public:
   DescriptorSet(VkDevice device, VkDescriptorSetLayout layout);
   ~DescriptorSet();
   
-  void UpdateDescriptorSet(Buffer& uniformBuffer, VkDeviceSize size);
+  void UpdateDescriptorSet(Buffer& uniformBuffer, VkDeviceSize size, Texture& texture);
 
   VkDescriptorSet GetSet() const { return m_set; }
 private:

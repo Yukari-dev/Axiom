@@ -22,6 +22,9 @@ class Device{
 public:
   Device(const VkInstance& instance, VkSurfaceKHR surface);
   ~Device();
+  
+  VkCommandBuffer BeginSingleTimeCommands(VkCommandPool pool);
+  void EndSingleTimeCommands(VkCommandBuffer cmd, VkCommandPool pool, VkQueue queue);
 
   VkPhysicalDevice GetPhysicalDevice() const { return m_physicalDevice; }
   VkDevice GetDevice() const { return m_device; }

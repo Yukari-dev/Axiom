@@ -157,4 +157,34 @@ bool Device::IsDeviceSuitable(VkPhysicalDevice device){
   return indices.IsComplete() && extensionSupport && swapChainAdequate;
 }
 
+VkCommandBuffer Device::BeginSingleTimeCommands(VkCommandPool pool){
+  VkCommandBufferAllocateInfo allocInfo{};
+  allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  allocInfo.commandBufferCount = 1;
+  allocInfo.commandPool = pool;
+  allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+  VkCommandBuffer cmd;
+  vkAllocateCommandBuffers(m_device, &allocInfo, &cmd);
+
+  VkCommandBufferBeginInfo beginInfo{};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+  vkBeginCommandBuffer(cmd, &beginInfo);
+  return cmd;
+}
+
+void Device::EndSingleTimeCommands(VkCommandBuffer cmd, VkCommandPool pool, VkQueue queue){
+  vkEndCommandBuffer(cmd);
+
+  VkSubmitInfo info{};
+  info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  info.commandBufferCount = 1;
+  info.pCommandBuffers = &cmd;
+  vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
+  vkDeviceWaitIdle(m_device);
+
+  vkFreeCommandBuffers(m_device, pool, 1, &cmd);
+}
+
 }

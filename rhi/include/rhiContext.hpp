@@ -12,6 +12,7 @@
 #include "swapchain.hpp"
 #include "commandBuffer.hpp"
 #include "syncObjects.hpp"
+#include "texture.hpp"
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <glm/glm.hpp>
@@ -52,6 +53,7 @@ private:
   std::unique_ptr<DescriptorSetLayout> m_descriptorSetLayout{nullptr};
   std::vector<std::unique_ptr<Buffer>> m_uniformBuffers;
   std::vector<std::unique_ptr<DescriptorSet>> m_descriptorSets;
+  std::unique_ptr<Texture> m_texture{nullptr};
 };
 
 }

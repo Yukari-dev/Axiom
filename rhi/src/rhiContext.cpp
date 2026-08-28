@@ -35,10 +35,10 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
     static_cast<uint32_t>(m_swapChain->GetImageViews().size())
   );
   std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f}},
-    {{ 0.5f, -0.5f}},
-    {{ 0.5f,  0.5f}},
-    {{-0.5f,  0.5f}}
+    {{-0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+    {{ 0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+    {{ 0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+    {{-0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}}
   };
   std::vector<uint16_t> indices = {
     0, 2, 1,
@@ -59,6 +59,9 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
       indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT
     )
   );
+  m_texture = std::make_unique<Texture>(
+    *m_device, m_commandPool->GetHandler(), std::string(AXIOM_TEXTURE_DIR) + "test.jpg"
+  );
 
   size_t imageCount = m_swapChain->GetImageViews().size();
   m_uniformBuffers.resize(imageCount);
@@ -73,7 +76,7 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
     m_descriptorSets[i] = std::make_unique<DescriptorSet>(
       m_device->GetDevice(), m_descriptorSetLayout->GetDescriptorSetLayout()
     );
-    m_descriptorSets[i]->UpdateDescriptorSet(*m_uniformBuffers[i], sizeof(UniformBufferObject));
+    m_descriptorSets[i]->UpdateDescriptorSet(*m_uniformBuffers[i], sizeof(UniformBufferObject), *m_texture);
   }
 }
 

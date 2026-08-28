@@ -7,6 +7,8 @@ namespace Axiom{
 
 struct Vertex{
   float pos[2];
+  float color[3];
+  float uv[2];
 
   static VkVertexInputBindingDescription GetBindingDescription(){
     VkVertexInputBindingDescription desc{};
@@ -16,12 +18,22 @@ struct Vertex{
     return desc;
   }
 
-  static std::array<VkVertexInputAttributeDescription, 1> GetAttributeDescriptions(){
-    std::array<VkVertexInputAttributeDescription, 1> attDesc{};
+  static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions(){
+    std::array<VkVertexInputAttributeDescription, 3> attDesc{};
     attDesc[0].binding = 0;
     attDesc[0].location = 0;
     attDesc[0].format = VK_FORMAT_R32G32_SFLOAT;
     attDesc[0].offset = offsetof(Vertex, pos);
+
+    attDesc[1].binding = 0;
+    attDesc[1].location = 1;
+    attDesc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attDesc[1].offset = offsetof(Vertex, color);
+
+    attDesc[2].binding = 0;
+    attDesc[2].location = 2;
+    attDesc[2].format = VK_FORMAT_R32G32_SFLOAT;
+    attDesc[2].offset = offsetof(Vertex, uv);
     return attDesc;
   }
 };

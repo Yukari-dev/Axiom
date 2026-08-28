@@ -52,7 +52,6 @@ public:
     
     return deviceLocalBuffer;
   }
-private:
   uint32_t FindMemoryType(uint32_t filterType, VkMemoryPropertyFlags properties);
 private:
   VkPhysicalDevice m_physicalDevice{};
