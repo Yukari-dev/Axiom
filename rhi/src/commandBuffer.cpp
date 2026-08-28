@@ -43,14 +43,23 @@ void CommandBuffer::BindPipeline(VkPipeline pipeline){
   vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 }
 
-void CommandBuffer::Draw(uint32_t vertexCount){
-  vkCmdDraw(m_commandBuffer, vertexCount, 1, 0, 0);
-}
 
 void CommandBuffer::BindVertexBuffer(VkBuffer buffer){
   VkBuffer buffers[] = {buffer};
   VkDeviceSize offsets[] = {0};
   vkCmdBindVertexBuffers(m_commandBuffer, 0, 1, buffers, offsets);
+}
+
+void CommandBuffer::BindIndexBuffer(VkBuffer buffer, VkIndexType indexType){
+  vkCmdBindIndexBuffer(m_commandBuffer, buffer, 0, indexType);
+}
+
+void CommandBuffer::Draw(uint32_t vertexCount){
+  vkCmdDraw(m_commandBuffer, vertexCount, 1, 0, 0);
+}
+
+void CommandBuffer::DrawIndexed(uint32_t indexCount){
+  vkCmdDrawIndexed(m_commandBuffer, indexCount, 1, 0, 0, 0);
 }
 
 void CommandBuffer::SetViewport(VkExtent2D extent) {

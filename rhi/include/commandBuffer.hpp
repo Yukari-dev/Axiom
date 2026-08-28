@@ -10,8 +10,10 @@ public:
   void Begin();
   void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, VkExtent2D extent);
   void BindPipeline(VkPipeline pipeline);
-  void Draw(uint32_t vertexCount);
   void BindVertexBuffer(VkBuffer buffer);
+  void BindIndexBuffer(VkBuffer buffer, VkIndexType indexType = VK_INDEX_TYPE_UINT16);
+  void Draw(uint32_t vertexCount);
+  void DrawIndexed(uint32_t indexCount);
   void SetViewport(VkExtent2D extent);
   void SetScissor(VkExtent2D extent);
   void EndRenderPass();

@@ -31,18 +31,30 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
     static_cast<uint32_t>(m_swapChain->GetImageViews().size())
   );
   std::vector<Vertex> vertices = {
-    {{ 0.0f,-0.5f}},
-    {{ 0.5f, 0.5f}},
-    {{-0.5f, 0.5f}}
+    {{-0.5f, -0.5f}},
+    {{ 0.5f, -0.5f}},
+    {{ 0.5f,  0.5f}},
+    {{-0.5f,  0.5f}}
   };
-  VkDeviceSize size = sizeof(vertices[0]) * vertices.size();
+  std::vector<uint16_t> indices = {
+    0, 1, 2,
+    2, 3, 0
+  };
+  m_indexCount = static_cast<uint32_t>(indices.size());
   m_vertexBuffer = std::make_unique<Buffer>(
-    m_device->GetPhysicalDevice(), m_device->GetDevice(),
-    size,
-    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    Buffer::CreateDeviceLocalBuffer(
+      m_device->GetPhysicalDevice(), m_device->GetDevice(),
+      m_commandPool->GetHandler(), m_device->GetGraphicsQueue(),
+      vertices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+    )
   );
-  m_vertexBuffer->CopyData(vertices.data(), size);
+  m_indexBuffer = std::make_unique<Buffer>(
+    Buffer::CreateDeviceLocalBuffer(
+      m_device->GetPhysicalDevice(), m_device->GetDevice(),
+      m_commandPool->GetHandler(), m_device->GetGraphicsQueue(),
+      indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+    )
+  );
 }
 
 void RhiContext::DrawFrame(){
@@ -72,7 +84,8 @@ void RhiContext::DrawFrame(){
   m_commandBuffer->SetViewport(m_swapChain->GetExtent());
   m_commandBuffer->SetScissor(m_swapChain->GetExtent());
   m_commandBuffer->BindVertexBuffer(m_vertexBuffer->GetBuffer());
-  m_commandBuffer->Draw(3);
+  m_commandBuffer->BindIndexBuffer(m_indexBuffer->GetBuffer());
+  m_commandBuffer->DrawIndexed(m_indexCount);
   m_commandBuffer->EndRenderPass();
   m_commandBuffer->End();
 

@@ -26,6 +26,7 @@ private:
 private:
   GLFWwindow *m_window{nullptr};
   bool m_framebufferResized{false};
+  uint32_t m_indexCount{0};
   std::unique_ptr<Instance> m_instance{nullptr};
   std::unique_ptr<Surface> m_surface{nullptr};
   std::unique_ptr<Device> m_device{nullptr};
@@ -37,6 +38,7 @@ private:
   std::unique_ptr<CommandBuffer> m_commandBuffer{nullptr};
   std::unique_ptr<SyncObjects> m_syncObjects{nullptr};
   std::unique_ptr<Buffer> m_vertexBuffer{nullptr};
+  std::unique_ptr<Buffer> m_indexBuffer{nullptr};
 };
 
 }
