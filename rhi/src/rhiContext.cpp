@@ -1,7 +1,5 @@
 #include "rhiContext.hpp"
 #include "syncObjects.hpp"
-#include "vertex.hpp"
-#include <chrono>
 #include <stdexcept>
 #include <vector>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,7 +10,7 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
   glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
   m_instance = std::make_unique<Instance>();
-  m_surface = std::make_unique<Surface>(m_instance->GetInstance(), window);
+  m_surface = std::make_unique<Surface>(m_instance->GetInstance(), m_window);
   m_device = std::make_unique<Device>(m_instance->GetInstance(), m_surface->GetSurface());
   m_swapChain = std::make_unique<SwapChain>(
     m_device->GetPhysicalDevice(), m_device->GetDevice(), m_surface->GetSurface(), window 
@@ -34,61 +32,16 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
     m_device->GetDevice(), 
     static_cast<uint32_t>(m_swapChain->GetImageViews().size())
   );
-  std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-    {{ 0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-    {{ 0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-    {{-0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}}
-  };
-  std::vector<uint16_t> indices = {
-    0, 2, 1,
-    2, 0, 3
-  };
-  m_indexCount = static_cast<uint32_t>(indices.size());
-  m_vertexBuffer = std::make_unique<Buffer>(
-    Buffer::CreateDeviceLocalBuffer(
-      m_device->GetPhysicalDevice(), m_device->GetDevice(),
-      m_commandPool->GetHandler(), m_device->GetGraphicsQueue(),
-      vertices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-    )
-  );
-  m_indexBuffer = std::make_unique<Buffer>(
-    Buffer::CreateDeviceLocalBuffer(
-      m_device->GetPhysicalDevice(), m_device->GetDevice(),
-      m_commandPool->GetHandler(), m_device->GetGraphicsQueue(),
-      indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-    )
-  );
-  m_texture = std::make_unique<Texture>(
-    *m_device, m_commandPool->GetHandler(), std::string(AXIOM_TEXTURE_DIR) + "test.jpg"
-  );
-
-  size_t imageCount = m_swapChain->GetImageViews().size();
-  m_uniformBuffers.resize(imageCount);
-  m_descriptorSets.resize(imageCount);
-  for(size_t i = 0; i < imageCount; i++){
-    m_uniformBuffers[i] = std::make_unique<Buffer>(
-      m_device->GetPhysicalDevice(), m_device->GetDevice(),
-      sizeof(UniformBufferObject),
-      VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-    );
-    m_descriptorSets[i] = std::make_unique<DescriptorSet>(
-      m_device->GetDevice(), m_descriptorSetLayout->GetDescriptorSetLayout()
-    );
-    m_descriptorSets[i]->UpdateDescriptorSet(*m_uniformBuffers[i], sizeof(UniformBufferObject), *m_texture);
-  }
 }
 
-void RhiContext::DrawFrame(){
-  VkFence inFlightFence = m_syncObjects->GetFence();
+void RhiContext::BeginFrame(){
+  m_inFlightFence = m_syncObjects->GetFence();
   VkDevice device = m_device->GetDevice();
-  vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
-  vkResetFences(device, 1, &inFlightFence);
-  uint32_t imageIndex;
+  vkWaitForFences(device, 1, &m_inFlightFence, VK_TRUE, UINT64_MAX);
+  vkResetFences(device, 1, &m_inFlightFence);
   VkResult result = vkAcquireNextImageKHR(
     device, m_swapChain->GetSwapChain(), UINT64_MAX, m_syncObjects->GetImageAvailable(),
-    VK_NULL_HANDLE, &imageIndex
+    VK_NULL_HANDLE, &m_imageIndex
   );
 
   if(result == VK_ERROR_OUT_OF_DATE_KHR){
@@ -97,39 +50,20 @@ void RhiContext::DrawFrame(){
   } else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
     throw std::runtime_error("Failed to acquire swap chain image.");
 
-  static auto startTime = std::chrono::high_resolution_clock::now();
-  auto currentTime = std::chrono::high_resolution_clock::now();
-  float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-  UniformBufferObject ubo{};
-  ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-  ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-  ubo.proj = glm::perspective(glm::radians(45.0f), m_swapChain->GetExtent().width / (float)m_swapChain->GetExtent().height, 0.1f, 10.0f);
-  ubo.proj[1][1] *= -1;
-
-  m_uniformBuffers[imageIndex]->CopyData(&ubo, sizeof(ubo));
-
   vkResetCommandBuffer(m_commandBuffer->GetHandler(), 0);
   m_commandBuffer->Begin();
   m_commandBuffer->BeginRenderPass(
-    m_renderPass->GetRenderPass(), m_framebuffer->GetFramebuffer(imageIndex),
+    m_renderPass->GetRenderPass(), m_framebuffer->GetFramebuffer(m_imageIndex),
     m_swapChain->GetExtent()
   );
   m_commandBuffer->BindPipeline(m_pipeline->GetPipeline());
   m_commandBuffer->SetViewport(m_swapChain->GetExtent());
   m_commandBuffer->SetScissor(m_swapChain->GetExtent());
-  
-  VkDescriptorSet currentSet = m_descriptorSets[imageIndex]->GetSet();
-  vkCmdBindDescriptorSets(
-    m_commandBuffer->GetHandler(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-    m_pipeline->GetPipelineLayout(), 0, 1, &currentSet, 0, nullptr
-  );
+}
 
-  m_commandBuffer->BindVertexBuffer(m_vertexBuffer->GetBuffer());
-  m_commandBuffer->BindIndexBuffer(m_indexBuffer->GetBuffer());
-  m_commandBuffer->DrawIndexed(m_indexCount);
-  m_commandBuffer->EndRenderPass();
+void RhiContext::EndFrame(){
+  vkCmdEndRenderPass(m_commandBuffer->GetHandler());
   m_commandBuffer->End();
-
   VkSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   VkSemaphore waitSemaphores[] = {m_syncObjects->GetImageAvailable()};
@@ -141,11 +75,11 @@ void RhiContext::DrawFrame(){
   VkCommandBuffer commandBuffer = m_commandBuffer->GetHandler();
   submitInfo.pCommandBuffers = &commandBuffer;
 
-  VkSemaphore signalSemaphores[] = {m_syncObjects->GetRenderFinished(imageIndex)};
+  VkSemaphore signalSemaphores[] = {m_syncObjects->GetRenderFinished(m_imageIndex)};
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = signalSemaphores;
 
-  VkResult qResult = vkQueueSubmit(m_device->GetGraphicsQueue(), 1, &submitInfo, inFlightFence);
+  VkResult qResult = vkQueueSubmit(m_device->GetGraphicsQueue(), 1, &submitInfo, m_inFlightFence);
   if(qResult != VK_SUCCESS)
     throw std::runtime_error("Failed to submit draw command buffer");
 
@@ -156,9 +90,9 @@ void RhiContext::DrawFrame(){
   presentInfo.swapchainCount = 1;
   VkSwapchainKHR swapchains[] = { m_swapChain->GetSwapChain() };
   presentInfo.pSwapchains = swapchains;
-  presentInfo.pImageIndices = &imageIndex;
+  presentInfo.pImageIndices = &m_imageIndex;
 
-  result = vkQueuePresentKHR(m_device->GetGraphicsQueue(), &presentInfo);
+  VkResult result = vkQueuePresentKHR(m_device->GetGraphicsQueue(), &presentInfo);
   if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_framebufferResized){
     m_framebufferResized = false;
     RecreateSwapChain();

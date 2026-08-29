@@ -1,7 +1,5 @@
 #pragma once
-#include "buffer.hpp"
 #include "commandPool.hpp"
-#include "descriptorSet.hpp"
 #include "descriptorSetLayout.hpp"
 #include "device.hpp"
 #include "framebuffer.hpp"
@@ -12,11 +10,9 @@
 #include "swapchain.hpp"
 #include "commandBuffer.hpp"
 #include "syncObjects.hpp"
-#include "texture.hpp"
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <glm/glm.hpp>
-#include <vector>
 
 namespace Axiom{
 
@@ -30,14 +26,29 @@ class RhiContext{
 public:
   RhiContext(GLFWwindow *window, int width, int height);
 
-  void DrawFrame();
+  void BeginFrame();
+  void EndFrame();
+
+  VkDevice GetDevice() const { return m_device->GetDevice(); }
+  VkPhysicalDevice GetPhysicalDevice() const { return m_device->GetPhysicalDevice(); }
+  VkQueue GetGraphicsQueue() const { return m_device->GetGraphicsQueue(); }
+  VkCommandPool GetCommandPool() const { return m_commandPool->GetHandler(); }
+  VkCommandBuffer GetCommandBuffer() const { return m_commandBuffer->GetHandler(); }
+  VkPipeline GetPipeline() const { return m_pipeline->GetPipeline(); }
+  VkPipelineLayout GetPipelineLayout() const { return m_pipeline->GetPipelineLayout(); }
+  VkDescriptorSetLayout GetDescriptorSetLayout() const { return m_descriptorSetLayout->GetDescriptorSetLayout(); }
+  VkExtent2D GetExtent() const { return m_swapChain->GetExtent(); }
+  uint32_t GetImageIndex() const { return m_imageIndex; }
+  size_t GetSwapChainImageCount() const { return m_swapChain->GetImageViews().size(); }
 private:
   static void FramebufferResizeCallback(GLFWwindow *window, int width, int height);
   void RecreateSwapChain();
 private:
   GLFWwindow *m_window{nullptr};
+  VkFence m_inFlightFence{};
   bool m_framebufferResized{false};
   uint32_t m_indexCount{0};
+  uint32_t m_imageIndex{0};
   std::unique_ptr<Instance> m_instance{nullptr};
   std::unique_ptr<Surface> m_surface{nullptr};
   std::unique_ptr<Device> m_device{nullptr};
@@ -48,12 +59,7 @@ private:
   std::unique_ptr<CommandPool> m_commandPool{nullptr};
   std::unique_ptr<CommandBuffer> m_commandBuffer{nullptr};
   std::unique_ptr<SyncObjects> m_syncObjects{nullptr};
-  std::unique_ptr<Buffer> m_vertexBuffer{nullptr};
-  std::unique_ptr<Buffer> m_indexBuffer{nullptr};
   std::unique_ptr<DescriptorSetLayout> m_descriptorSetLayout{nullptr};
-  std::vector<std::unique_ptr<Buffer>> m_uniformBuffers;
-  std::vector<std::unique_ptr<DescriptorSet>> m_descriptorSets;
-  std::unique_ptr<Texture> m_texture{nullptr};
 };
 
 }

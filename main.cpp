@@ -9,7 +9,8 @@ int main(int ac, char **av) {
 
   while (!window.ShouldClose()){
     window.PollEvents();
-    rhi.DrawFrame();
+    rhi.BeginFrame();
+    rhi.EndFrame();
   }
 
   Axiom::Shutdown();
