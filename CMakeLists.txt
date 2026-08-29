@@ -11,6 +11,8 @@ find_program(GLSLC glslc REQUIRED)
 file(GLOB SHADER_SOURCES
   ${CMAKE_SOURCE_DIR}/shaders/*.vert
   ${CMAKE_SOURCE_DIR}/shaders/*.frag
+  ${CMAKE_SOURCE_DIR}/shaders/meshes/*.vert
+  ${CMAKE_SOURCE_DIR}/shaders/meshes/*.frag
 )
 
 foreach(SHADER ${SHADER_SOURCES})

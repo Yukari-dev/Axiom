@@ -7,10 +7,12 @@ namespace Axiom{
 
 Pipeline::Pipeline(
   VkDevice device, VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
-  const std::string& vert, const std::string& frag
+  const std::string& vert, const std::string& frag,
+  uint32_t pushConstantSize,
+  VkShaderStageFlags pushConstantStages
 )
   : m_device(device){
-  Create(extent, renderPass, layout, vert, frag);
+  Create(extent, renderPass, layout, vert, frag, pushConstantSize, pushConstantStages);
 }
 
 Pipeline::~Pipeline(){
@@ -20,7 +22,9 @@ Pipeline::~Pipeline(){
 
 void Pipeline::Create(
   VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
-  const std::string& vert, const std::string& frag
+  const std::string& vert, const std::string& frag,
+  uint32_t pushConstantSize,
+  VkShaderStageFlags pushConstantStages
 ){
   ShaderModule vertModule(std::string(AXIOM_SHADER_DIR) + vert + ".spv", m_device);
   ShaderModule fragModule(std::string(AXIOM_SHADER_DIR) + frag + ".spv", m_device);
@@ -97,9 +101,9 @@ void Pipeline::Create(
     VK_COLOR_COMPONENT_G_BIT |
     VK_COLOR_COMPONENT_B_BIT |
     VK_COLOR_COMPONENT_A_BIT;
-  colorBlendAttachment.blendEnable = VK_FALSE;
-  colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-  colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+  colorBlendAttachment.blendEnable = VK_TRUE;
+  colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+  colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
   colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
   colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
   colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
@@ -130,8 +134,15 @@ void Pipeline::Create(
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   pipelineLayoutInfo.setLayoutCount = 1;
   pipelineLayoutInfo.pSetLayouts = &layout;
-  pipelineLayoutInfo.pushConstantRangeCount = 0;
-  pipelineLayoutInfo.pPushConstantRanges = nullptr;
+  
+  VkPushConstantRange pushConstantRange{};
+  if(pushConstantSize > 0){
+    pushConstantRange.stageFlags = pushConstantStages;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = pushConstantSize;
+  }
+  pipelineLayoutInfo.pushConstantRangeCount = (pushConstantSize > 0) ? 1 : 0;
+  pipelineLayoutInfo.pPushConstantRanges = (pushConstantSize > 0) ? &pushConstantRange : nullptr;
 
   VkResult result = vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout);
   if(result != VK_SUCCESS)

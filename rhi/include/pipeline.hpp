@@ -8,7 +8,9 @@ class Pipeline{
 public:
   Pipeline(
     VkDevice device, VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
-    const std::string& vert, const std::string& frag
+    const std::string& vert, const std::string& frag,
+    uint32_t pushConstantSize = 0,
+    VkShaderStageFlags pushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
   );
   ~Pipeline();
   
@@ -18,7 +20,9 @@ public:
 private:
   void Create(
     VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
-    const std::string& vert, const std::string& frag
+    const std::string& vert, const std::string& frag,
+    uint32_t pushConstantSize = 0,
+    VkShaderStageFlags pushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
   );
 private:
   VkDevice m_device;
