@@ -6,7 +6,10 @@
 #include "rhiContext.hpp"
 #include "vertex.hpp"
 #include <cstdint>
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <vector>
 
@@ -22,6 +25,7 @@ public:
   
   void Begin();
   void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color);
+  void DrawLine(glm::vec2 fromPos, glm::vec2 toPos, glm::vec3 color);
   void End();
 private:
   static constexpr uint32_t MAX_QUADS = 1000;

@@ -1,5 +1,4 @@
 #include "renderer2d.hpp"
-#include <glm/ext/matrix_clip_space.hpp>
 
 namespace Axiom{
 
@@ -43,11 +42,26 @@ void Renderer2D::DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 col){
   m_vertices.push_back({{pos.x, pos.y + size.y}, col, {0.0f, 1.0f}});
 
   m_indices.push_back(base + 0);
-  m_indices.push_back(base + 2);
   m_indices.push_back(base + 1);
   m_indices.push_back(base + 2);
-  m_indices.push_back(base + 0);
+  m_indices.push_back(base + 2);
   m_indices.push_back(base + 3);
+  m_indices.push_back(base + 0);
+}
+
+void Renderer2D::DrawLine(glm::vec2 fromPos, glm::vec2 toPos, glm::vec3 color){
+  uint32_t base = static_cast<uint16_t>(m_vertices.size());
+  m_vertices.push_back({fromPos, color, {0.0f, 0.0f}});
+  m_vertices.push_back({toPos, color, {1.0f, 0.0f}});
+  m_vertices.push_back({{toPos.x, toPos.y + 1}, color, {1.0f, 1.0f}});
+  m_vertices.push_back({{fromPos.x, fromPos.y + 1}, color, {0.0f, 1.0f}});
+
+  m_indices.push_back(base + 0);
+  m_indices.push_back(base + 1);
+  m_indices.push_back(base + 2);
+  m_indices.push_back(base + 2);
+  m_indices.push_back(base + 3);
+  m_indices.push_back(base + 0);
 }
 
 void Renderer2D::End(){
@@ -57,7 +71,12 @@ void Renderer2D::End(){
   uint32_t imgIdx = m_rhi.GetImageIndex();
   Renderer2DUniforms ubo{};
   VkExtent2D extent = m_rhi.GetExtent();
-  ubo.projection = glm::ortho(0.0f, (float)extent.width, (float)extent.height, 0.0f, -1.0f, 1.0f);
+  ubo.projection = glm::ortho(
+    0.0f, static_cast<float>(extent.width),
+    0.0f,
+    static_cast<float>(extent.height), 
+    -1.0f, 1.0f
+  );
   m_uniformBuffers[imgIdx]->CopyData(&ubo, sizeof(ubo));
   
   CommandBuffer& cmd = m_rhi.GetCommandBufferObject();
