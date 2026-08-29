@@ -38,8 +38,16 @@ public:
   Renderer2D(RhiContext& rhi);
   
   void Begin();
+
   void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color);
   void DrawRect(Rectangle rec, glm::vec3 color);
+
+  void DrawRoundedRect(glm::vec2 pos, glm::vec2 size, float roundness, glm::vec3 color);
+  void DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color);
+
+  void DrawLine(glm::vec2 from, glm::vec2 to, glm::vec3 color);
+  void DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 color);
+
   void End();
 private:
   void FlushBatch(Batch& batch);
@@ -54,6 +62,7 @@ private:
 
   std::unordered_map<Pipeline*, Batch> m_batches;
   VertexLayout m_rectLayout{};
+  VertexLayout m_roundedRectLayout{};
 };
 
 }

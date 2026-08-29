@@ -13,6 +13,18 @@ Renderer2D::Renderer2D(RhiContext& ctx) : m_rhi(ctx){
     "renderer2d.vert", "renderer2d.frag",
     m_rectLayout
   );
+
+  m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
+  m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
+  m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
+  m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
+  m_roundedRectLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
+  m_roundedRectPipeline = std::make_unique<Pipeline>(
+    m_rhi.GetDevice(), m_rhi.GetExtent(), m_rhi.GetRenderPass(),
+    m_descriptorSetLayout->GetDescriptorSetLayout(),
+    "roundedRect2d.vert", "roundedRect2d.frag",
+    m_roundedRectLayout
+  );
   
   size_t imageCount = m_rhi.GetSwapChainImageCount();
   m_uniformBuffers.resize(imageCount);
@@ -79,6 +91,73 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col){
   batch.indices.push_back(base + 0);
 }
 
+void Renderer2D::DrawRoundedRect(glm::vec2 pos, glm::vec2 size, float roundness, glm::vec3 color){
+  DrawRoundedRect({pos.x, pos.y, size.x, size.y}, roundness, color);
+}
+
+void Renderer2D::DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color){
+  Batch& batch = GetBatch(m_roundedRectPipeline.get(), m_roundedRectLayout);
+
+  uint16_t base = static_cast<uint16_t>(batch.vertexData.Size() / batch.vertexLayout.GetStride());
+
+  glm::vec2 size = {rec.width, rec.height};
+  glm::vec2 half = size * 0.5f;
+
+  auto pushVertex = [&](glm::vec2 pos, glm::vec2 localUV){
+    batch.vertexData.PushVec2(pos);
+    batch.vertexData.PushVec3(color);
+    batch.vertexData.PushVec2(localUV);
+    batch.vertexData.PushVec2(size);
+    batch.vertexData.PushFloat(roundness);
+  };
+
+  pushVertex({rec.x, rec.y}, {-half.x, -half.y});
+  pushVertex({rec.x + rec.width, rec.y}, {half.x, -half.y});
+  pushVertex({rec.x + rec.width, rec.y + rec.height}, {half.x, half.y});
+  pushVertex({rec.x, rec.y + rec.height}, {-half.x, half.y});
+
+  batch.indices.push_back(base + 0);
+  batch.indices.push_back(base + 1);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 3);
+  batch.indices.push_back(base + 0);
+}
+
+void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 color){
+  Batch& batch = GetBatch(m_pipeline.get(), m_rectLayout);
+
+  uint16_t base = static_cast<uint16_t>(batch.vertexData.Size() / batch.vertexLayout.GetStride());
+
+  glm::vec2 dir = glm::normalize(to - from);
+  glm::vec2 normal = {-dir.y, dir.x};
+  glm::vec2 offset = normal * (thick * 0.5f);
+
+  batch.vertexData.PushVec2(from - offset);
+  batch.vertexData.PushVec3(color);
+
+  batch.vertexData.PushVec2(to - offset);
+  batch.vertexData.PushVec3(color);
+
+  batch.vertexData.PushVec2(to + offset);
+  batch.vertexData.PushVec3(color);
+
+  batch.vertexData.PushVec2(from + offset);
+  batch.vertexData.PushVec3(color);
+
+  batch.indices.push_back(base + 0);
+  batch.indices.push_back(base + 1);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 3);
+  batch.indices.push_back(base + 0);
+}
+
+void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, glm::vec3 color){
+  DrawLine(from, to, 1, color);
+}
+
+
 void Renderer2D::End(){
   uint32_t imgIdx = m_rhi.GetImageIndex();
   VkExtent2D extent = m_rhi.GetExtent();
@@ -102,14 +181,12 @@ void Renderer2D::FlushBatch(Batch& batch){
   CommandBuffer& cmd = m_rhi.GetCommandBufferObject();
   cmd.BindPipeline(batch.pipeline->GetPipeline());
 
-  if(batch.pipeline == m_pipeline.get()){
-    uint32_t imgIndx = m_rhi.GetImageIndex();
-    VkDescriptorSet set = m_descriptorSets[imgIndx]->GetSet();
-    vkCmdBindDescriptorSets(
-      cmd.GetHandler(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-      batch.pipeline->GetPipelineLayout(), 0, 1, &set, 0, nullptr
-    );
-  }
+  uint32_t imgIndx = m_rhi.GetImageIndex();
+  VkDescriptorSet set = m_descriptorSets[imgIndx]->GetSet();
+  vkCmdBindDescriptorSets(
+    cmd.GetHandler(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+    batch.pipeline->GetPipelineLayout(), 0, 1, &set, 0, nullptr
+  );
   batch.mesh.Bind(cmd);
   cmd.DrawIndexed(batch.mesh.GetIndexCount());
 }
