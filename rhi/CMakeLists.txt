@@ -32,6 +32,8 @@ set(
   SHADER_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/triangle.vert
   ${CMAKE_CURRENT_SOURCE_DIR}/shaders/triangle.frag
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/renderer2d.vert
+  ${CMAKE_CURRENT_SOURCE_DIR}/shaders/renderer2d.frag
 )
 
 foreach(SHADER ${SHADER_SOURCES})

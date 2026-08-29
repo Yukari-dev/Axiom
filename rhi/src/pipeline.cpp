@@ -5,9 +5,12 @@
 
 namespace Axiom{
 
-Pipeline::Pipeline(VkDevice device, VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout)
+Pipeline::Pipeline(
+  VkDevice device, VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
+  const std::string& vert, const std::string& frag
+)
   : m_device(device){
-  Create(extent, renderPass, layout);
+  Create(extent, renderPass, layout, vert, frag);
 }
 
 Pipeline::~Pipeline(){
@@ -15,9 +18,12 @@ Pipeline::~Pipeline(){
   vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
 }
 
-void Pipeline::Create(VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout){
-  ShaderModule vertModule(std::string(AXIOM_SHADER_DIR) + "triangle.vert.spv", m_device);
-  ShaderModule fragModule(std::string(AXIOM_SHADER_DIR) + "triangle.frag.spv", m_device);
+void Pipeline::Create(
+  VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
+  const std::string& vert, const std::string& frag
+){
+  ShaderModule vertModule(std::string(AXIOM_SHADER_DIR) + vert + ".spv", m_device);
+  ShaderModule fragModule(std::string(AXIOM_SHADER_DIR) + frag + ".spv", m_device);
 
   VkPipelineShaderStageCreateInfo vertShaderInfo{};
   vertShaderInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

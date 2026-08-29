@@ -18,11 +18,6 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
   m_renderPass = std::make_unique<RenderPass>(
     m_device->GetDevice(), m_swapChain->GetFormat()
   );
-  m_descriptorSetLayout = std::make_unique<DescriptorSetLayout>(m_device->GetDevice());
-  m_pipeline = std::make_unique<Pipeline>(
-    m_device->GetDevice(), m_swapChain->GetExtent(), m_renderPass->GetRenderPass(),
-    m_descriptorSetLayout->GetDescriptorSetLayout()
-  );
   m_framebuffer = std::make_unique<Framebuffer>(
     m_device->GetDevice(), m_swapChain->GetImageViews(), m_swapChain->GetExtent(), m_renderPass->GetRenderPass()
   );
@@ -56,7 +51,6 @@ void RhiContext::BeginFrame(){
     m_renderPass->GetRenderPass(), m_framebuffer->GetFramebuffer(m_imageIndex),
     m_swapChain->GetExtent()
   );
-  m_commandBuffer->BindPipeline(m_pipeline->GetPipeline());
   m_commandBuffer->SetViewport(m_swapChain->GetExtent());
   m_commandBuffer->SetScissor(m_swapChain->GetExtent());
 }

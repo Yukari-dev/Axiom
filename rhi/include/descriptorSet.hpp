@@ -11,6 +11,7 @@ public:
   ~DescriptorSet();
   
   void UpdateDescriptorSet(Buffer& uniformBuffer, VkDeviceSize size, Texture& texture);
+  void UpdateDescriptorSet(Buffer& uniformBuffer, VkDeviceSize size);
 
   VkDescriptorSet GetSet() const { return m_set; }
 private:

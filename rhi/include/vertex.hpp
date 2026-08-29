@@ -2,13 +2,14 @@
 #include <array>
 #include <cstddef>
 #include <vulkan/vulkan.hpp>
+#include <glm/glm.hpp>
 
 namespace Axiom{
 
 struct Vertex{
-  float pos[2];
-  float color[3];
-  float uv[2];
+  glm::vec2 pos;
+  glm::vec3 color;
+  glm::vec2 uv;
 
   static VkVertexInputBindingDescription GetBindingDescription(){
     VkVertexInputBindingDescription desc{};

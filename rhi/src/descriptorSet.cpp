@@ -41,6 +41,23 @@ void DescriptorSet::UpdateDescriptorSet(Buffer& uniformBuffer, VkDeviceSize size
   vkUpdateDescriptorSets(m_device, 2, writes, 0, nullptr);
 }
 
+void DescriptorSet::UpdateDescriptorSet(Buffer& uniformBuffer, VkDeviceSize size){
+  VkDescriptorBufferInfo bufferInfo{};
+  bufferInfo.buffer = uniformBuffer.GetBuffer();
+  bufferInfo.offset = 0;
+  bufferInfo.range = size;
+
+  VkWriteDescriptorSet writes[1]{};
+  writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writes[0].descriptorCount = 1;
+  writes[0].dstSet = m_set;
+  writes[0].dstBinding = 0;
+  writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  writes[0].pBufferInfo = &bufferInfo;
+
+  vkUpdateDescriptorSets(m_device, 1, writes, 0, nullptr);
+}
+
 void DescriptorSet::Create(){
   VkDescriptorPoolSize poolSizes[2]{};
 

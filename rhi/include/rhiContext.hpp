@@ -34,9 +34,8 @@ public:
   VkQueue GetGraphicsQueue() const { return m_device->GetGraphicsQueue(); }
   VkCommandPool GetCommandPool() const { return m_commandPool->GetHandler(); }
   VkCommandBuffer GetCommandBuffer() const { return m_commandBuffer->GetHandler(); }
-  VkPipeline GetPipeline() const { return m_pipeline->GetPipeline(); }
-  VkPipelineLayout GetPipelineLayout() const { return m_pipeline->GetPipelineLayout(); }
-  VkDescriptorSetLayout GetDescriptorSetLayout() const { return m_descriptorSetLayout->GetDescriptorSetLayout(); }
+  CommandBuffer& GetCommandBufferObject() const { return *m_commandBuffer; }
+  VkRenderPass GetRenderPass() const { return m_renderPass->GetRenderPass(); }
   VkExtent2D GetExtent() const { return m_swapChain->GetExtent(); }
   uint32_t GetImageIndex() const { return m_imageIndex; }
   size_t GetSwapChainImageCount() const { return m_swapChain->GetImageViews().size(); }
@@ -54,12 +53,10 @@ private:
   std::unique_ptr<Device> m_device{nullptr};
   std::unique_ptr<SwapChain> m_swapChain{nullptr};
   std::unique_ptr<RenderPass> m_renderPass{nullptr};
-  std::unique_ptr<Pipeline> m_pipeline{nullptr};
   std::unique_ptr<Framebuffer> m_framebuffer{nullptr};
   std::unique_ptr<CommandPool> m_commandPool{nullptr};
   std::unique_ptr<CommandBuffer> m_commandBuffer{nullptr};
   std::unique_ptr<SyncObjects> m_syncObjects{nullptr};
-  std::unique_ptr<DescriptorSetLayout> m_descriptorSetLayout{nullptr};
 };
 
 }
