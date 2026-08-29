@@ -1,4 +1,5 @@
 #pragma once
+#include "vertexLayout.hpp"
 #include <string>
 #include <vulkan/vulkan.hpp>
 
@@ -9,8 +10,7 @@ public:
   Pipeline(
     VkDevice device, VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
     const std::string& vert, const std::string& frag,
-    uint32_t pushConstantSize = 0,
-    VkShaderStageFlags pushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
+    const VertexLayout& vertexLayout
   );
   ~Pipeline();
   
@@ -21,8 +21,7 @@ private:
   void Create(
     VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
     const std::string& vert, const std::string& frag,
-    uint32_t pushConstantSize = 0,
-    VkShaderStageFlags pushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
+    const VertexLayout& vertexLayout
   );
 private:
   VkDevice m_device;

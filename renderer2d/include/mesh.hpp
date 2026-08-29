@@ -1,7 +1,6 @@
 #pragma once
 #include "buffer.hpp"
 #include "commandBuffer.hpp"
-#include "vertex.hpp"
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -13,7 +12,7 @@ class Mesh{
 public:
   Mesh(VkPhysicalDevice pDevice, VkDevice device);
 
-  void SetData(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices);
+  void SetData(const void *data, size_t vertexDataSize, const std::vector<uint16_t>& indices);
   void Bind(CommandBuffer& cmd);
   uint32_t GetIndexCount() const { return m_indexCount; };
 private:
@@ -28,7 +27,7 @@ private:
 
   VkDeviceSize m_verticesCapacity{0};
   VkDeviceSize m_indicesCapacity{0};
-  uint32_t m_indexCount = 0;
+  uint32_t m_indexCount{0};
 };
 
 }

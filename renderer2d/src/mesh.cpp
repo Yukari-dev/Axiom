@@ -25,18 +25,17 @@ void Mesh::EnsureCapacity(VkDeviceSize vertSize, VkDeviceSize indSize){
   }
 }
 
-void Mesh::SetData(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices){
-  if(vertices.empty() || indices.empty()){
+void Mesh::SetData(const void *data, size_t vertexDataSize, const std::vector<uint16_t>& indices){
+  if(vertexDataSize == 0 || indices.empty()){
     m_indexCount = 0;
     return;
   }
 
-  VkDeviceSize vertSize = sizeof(Vertex) * vertices.size();
   VkDeviceSize indSize = sizeof(uint16_t) * indices.size();
 
-  EnsureCapacity(vertSize, indSize);
+  EnsureCapacity(vertexDataSize, indSize);
 
-  m_vertexBuffer->CopyData(vertices.data(), vertSize);
+  m_vertexBuffer->CopyData(data, vertexDataSize);
   m_indexBuffer->CopyData(indices.data(), indSize);
 
   m_indexCount = static_cast<uint32_t>(indices.size());

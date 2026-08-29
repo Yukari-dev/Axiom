@@ -2,17 +2,17 @@
 #include "shaderModule.hpp"
 #include "vertex.hpp"
 #include <stdexcept>
+#include <vector>
 
 namespace Axiom{
 
 Pipeline::Pipeline(
   VkDevice device, VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
   const std::string& vert, const std::string& frag,
-  uint32_t pushConstantSize,
-  VkShaderStageFlags pushConstantStages
+  const VertexLayout& vertexLayout
 )
   : m_device(device){
-  Create(extent, renderPass, layout, vert, frag, pushConstantSize, pushConstantStages);
+  Create(extent, renderPass, layout, vert, frag, vertexLayout);
 }
 
 Pipeline::~Pipeline(){
@@ -23,8 +23,7 @@ Pipeline::~Pipeline(){
 void Pipeline::Create(
   VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
   const std::string& vert, const std::string& frag,
-  uint32_t pushConstantSize,
-  VkShaderStageFlags pushConstantStages
+  const VertexLayout& vertexLayout
 ){
   ShaderModule vertModule(std::string(AXIOM_SHADER_DIR) + vert + ".spv", m_device);
   ShaderModule fragModule(std::string(AXIOM_SHADER_DIR) + frag + ".spv", m_device);
@@ -45,12 +44,26 @@ void Pipeline::Create(
 
   VkPipelineVertexInputStateCreateInfo vertInputInfo{};
   vertInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;;
+  
+  VkVertexInputBindingDescription bindingDescription{};
+  bindingDescription.binding = 0;
+  bindingDescription.stride = vertexLayout.GetStride();
+  bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-  auto bindingDescription = Vertex::GetBindingDescription();
-  auto attributeDescriptions = Vertex::GetAttributeDescriptions();
+  std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+  const auto& attrs = vertexLayout.GetAttribute();
+  for(size_t i = 0; i < attrs.size(); i++){
+    VkVertexInputAttributeDescription attr{};
+    attr.binding = 0;
+    attr.location = static_cast<uint32_t>(i);
+    attr.format = attrs[i].format;
+    attr.offset = attrs[i].offset;
+    attributeDescriptions.push_back(attr);
+  }
+
   vertInputInfo.vertexBindingDescriptionCount = 1;
   vertInputInfo.pVertexBindingDescriptions = &bindingDescription;
-  vertInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+  vertInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attrs.size());
   vertInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
   VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -134,15 +147,8 @@ void Pipeline::Create(
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   pipelineLayoutInfo.setLayoutCount = 1;
   pipelineLayoutInfo.pSetLayouts = &layout;
-  
-  VkPushConstantRange pushConstantRange{};
-  if(pushConstantSize > 0){
-    pushConstantRange.stageFlags = pushConstantStages;
-    pushConstantRange.offset = 0;
-    pushConstantRange.size = pushConstantSize;
-  }
-  pipelineLayoutInfo.pushConstantRangeCount = (pushConstantSize > 0) ? 1 : 0;
-  pipelineLayoutInfo.pPushConstantRanges = (pushConstantSize > 0) ? &pushConstantRange : nullptr;
+  pipelineLayoutInfo.pushConstantRangeCount = 0;
+  pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
   VkResult result = vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout);
   if(result != VK_SUCCESS)
