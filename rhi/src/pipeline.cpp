@@ -1,6 +1,5 @@
 #include "pipeline.hpp"
 #include "shaderModule.hpp"
-#include "vertex.hpp"
 #include <stdexcept>
 #include <vector>
 

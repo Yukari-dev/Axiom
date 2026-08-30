@@ -33,6 +33,10 @@ struct Batch{
   Mesh mesh;
 };
 
+struct PipelineHandle{
+  uint32_t index{0};
+};
+
 class Renderer2D{
 public:
   Renderer2D(RhiContext& rhi);
@@ -41,6 +45,8 @@ public:
 
   void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color);
   void DrawRect(Rectangle rec, glm::vec3 color);
+  void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, PipelineHandle shaderHandle);
+  void DrawRect(Rectangle rec, glm::vec3 color, PipelineHandle shaderHandle);
 
   void DrawRoundedRect(glm::vec2 pos, glm::vec2 size, float roundness, glm::vec3 color);
   void DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color);
@@ -49,9 +55,12 @@ public:
   void DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 color);
 
   void End();
+
+  PipelineHandle LoadFragShader(const std::string& shaderName);
 private:
   void FlushBatch(Batch& batch);
   Batch& GetBatch(Pipeline *pipeline, const VertexLayout& layout);
+  Pipeline& GetPipelineFromHandle(PipelineHandle handle);
 private:
   RhiContext& m_rhi;
   std::unique_ptr<DescriptorSetLayout> m_descriptorSetLayout{nullptr};
@@ -59,10 +68,14 @@ private:
   std::unique_ptr<Pipeline> m_roundedRectPipeline{nullptr};
   std::vector<std::unique_ptr<Buffer>> m_uniformBuffers;
   std::vector<std::unique_ptr<DescriptorSet>> m_descriptorSets;
+  std::vector<std::unique_ptr<Pipeline>> m_pipelines;
+  std::unordered_map<std::string, uint32_t> m_pipelineLookup;
 
   std::unordered_map<Pipeline*, Batch> m_batches;
+  std::vector<Batch*> m_renderQueue;
   VertexLayout m_rectLayout{};
   VertexLayout m_roundedRectLayout{};
+  VertexLayout m_customLayout{};
 };
 
 }
