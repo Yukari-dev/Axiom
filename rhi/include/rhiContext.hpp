@@ -30,6 +30,7 @@ public:
   void EndFrame();
 
   VkDevice GetDevice() const { return m_device->GetDevice(); }
+  Device& GetDeviceObject() const { return *m_device; }
   VkPhysicalDevice GetPhysicalDevice() const { return m_device->GetPhysicalDevice(); }
   VkQueue GetGraphicsQueue() const { return m_device->GetGraphicsQueue(); }
   VkCommandPool GetCommandPool() const { return m_commandPool->GetHandler(); }

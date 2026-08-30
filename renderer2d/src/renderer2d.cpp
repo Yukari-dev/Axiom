@@ -25,14 +25,28 @@ Renderer2D::Renderer2D(RhiContext& ctx) : m_rhi(ctx){
     "roundedRect2d.vert", "roundedRect2d.frag",
     m_roundedRectLayout
   );
-  m_customLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);   
+  m_customLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
   m_customLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
-  m_customLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);   
-  m_customLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);   
+  m_customLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
+  m_customLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
+
+  m_textureLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
+  m_textureLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
+  m_textureLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
+  m_defaultTexture = std::make_unique<Texture>(
+    m_rhi.GetDeviceObject(), m_rhi.GetCommandPool(), "default.jpg"
+  );
+  m_texturePipeline = std::make_unique<Pipeline>(
+    m_rhi.GetDevice(), m_rhi.GetExtent(), m_rhi.GetRenderPass(),
+    m_descriptorSetLayout->GetDescriptorSetLayout(),
+    "texture2d.vert", "texture2d.frag",
+    m_textureLayout
+  );
   
   size_t imageCount = m_rhi.GetSwapChainImageCount();
   m_uniformBuffers.resize(imageCount);
   m_descriptorSets.resize(imageCount);
+  m_textureDescriptorSets.resize(imageCount);
   for (size_t i = 0; i < imageCount; i++) {
     m_uniformBuffers[i] = std::make_unique<Buffer>(
       m_rhi.GetPhysicalDevice(), m_rhi.GetDevice(), sizeof(Renderer2DUniforms),
@@ -42,18 +56,49 @@ Renderer2D::Renderer2D(RhiContext& ctx) : m_rhi(ctx){
     m_descriptorSets[i] = std::make_unique<DescriptorSet>(
       m_rhi.GetDevice(), m_descriptorSetLayout->GetDescriptorSetLayout()
     );
+    m_textureDescriptorSets[i] = std::make_unique<DescriptorSet>(
+      m_rhi.GetDevice(), m_descriptorSetLayout->GetDescriptorSetLayout()
+    );
+    m_textureDescriptorSets[i]->UpdateDescriptorSet(
+      *m_uniformBuffers[i], sizeof(Renderer2DUniforms), *m_defaultTexture
+    );
     m_descriptorSets[i]->UpdateDescriptorSet(
       *m_uniformBuffers[i], sizeof(Renderer2DUniforms)
     );
   }
 }
 
-Batch& Renderer2D::GetBatch(Pipeline *pipeline, const VertexLayout& layout){
-  auto it = m_batches.find(pipeline);
+VkDescriptorSet Renderer2D::GetOrCreateTextureSet(Texture& texture, uint32_t imgIdx){
+  auto key = std::make_pair(&texture, imgIdx);
+  auto it = m_textureSets.find(key);
+
+  if(it != m_textureSets.end()){
+    return it->second->GetSet();
+  }
+
+  auto descriptorSet = std::make_unique<DescriptorSet>(
+    m_rhi.GetDevice(),
+    m_descriptorSetLayout->GetDescriptorSetLayout()
+  );
+
+  descriptorSet->UpdateDescriptorSet(
+    *m_uniformBuffers[imgIdx],
+    sizeof(Renderer2DUniforms),
+    texture
+  );
+
+  VkDescriptorSet rawSet = descriptorSet->GetSet();
+  m_textureSets[key] = std::move(descriptorSet);
+  return rawSet;
+}
+
+Batch& Renderer2D::GetBatch(Pipeline *pipeline, VkDescriptorSet set, const VertexLayout& layout){
+  BatchKey key = { pipeline, set };
+  auto it = m_batches.find(key);
   Batch* batch = nullptr;
   if (it == m_batches.end()){
     auto [inserted, _] = m_batches.emplace(
-      pipeline, Batch{pipeline, layout, {}, {}, Mesh(m_rhi.GetPhysicalDevice(), m_rhi.GetDevice())}
+      key, Batch{pipeline, layout, set, {}, {}, Mesh(m_rhi.GetPhysicalDevice(), m_rhi.GetDevice())}
     );
     batch = &inserted->second;
   } else
@@ -77,9 +122,11 @@ void Renderer2D::DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 col){
 }
 
 void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col){
-  Batch& batch = GetBatch(m_pipeline.get(), m_rectLayout);
+  uint32_t imgIdx = m_rhi.GetImageIndex();
+  VkDescriptorSet defaultSet = m_descriptorSets[imgIdx]->GetSet();
+  Batch& batch = GetBatch(m_pipeline.get(), defaultSet, m_rectLayout);
 
-  uint16_t base = static_cast<uint16_t>(batch.vertexData.Size() / batch.vertexLayout.GetStride());
+  uint16_t base = GetIndexBase(batch);
 
   batch.vertexData.PushVec2({rec.x, rec.y});
   batch.vertexData.PushVec3(col);
@@ -106,14 +153,77 @@ void Renderer2D::DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, Pipeli
 }
 
 void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col, PipelineHandle shaderHandle){
+  uint32_t imgIdx = m_rhi.GetImageIndex();
+  VkDescriptorSet defaultSet = m_descriptorSets[imgIdx]->GetSet();
   Pipeline& pipeline = GetPipelineFromHandle(shaderHandle);
-  Batch& batch = GetBatch(&pipeline, m_customLayout);
+  Batch& batch = GetBatch(&pipeline, defaultSet, m_customLayout);
 
-  uint16_t base = static_cast<uint16_t>(batch.vertexData.Size() / batch.vertexLayout.GetStride());
+  uint16_t base = GetIndexBase(batch);
   auto pushVertex = [&](glm::vec2 pos, glm::vec2 uv) {
     batch.vertexData.PushVec2(pos);
     batch.vertexData.PushVec3(col);
     batch.vertexData.PushFloat(10.0f);
+    batch.vertexData.PushVec2(uv);
+  };
+
+  pushVertex({rec.x, rec.y}, {0.0f, 0.0f});
+  pushVertex({rec.x + rec.width, rec.y}, {1.0f, 0.0f});
+  pushVertex({rec.x + rec.width, rec.y + rec.height}, {1.0f, 1.0f});
+  pushVertex({rec.x, rec.y + rec.height}, {0.0f, 1.0f});
+
+  batch.indices.push_back(base + 0);
+  batch.indices.push_back(base + 1);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 3);
+  batch.indices.push_back(base + 0);
+}
+
+void Renderer2D::DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, TextureHandle textureHandle){
+  DrawRect({pos.x, pos.y, size.x, size.y}, color, textureHandle);
+}
+
+void Renderer2D::DrawRect(Rectangle rec, glm::vec3 color, TextureHandle textureHandle){
+  Texture& texture = GetTextureFromHandle(textureHandle);
+  uint32_t imgIdx = m_rhi.GetImageIndex();
+  VkDescriptorSet texSet = GetOrCreateTextureSet(texture, imgIdx);
+
+  Batch& batch = GetBatch(m_texturePipeline.get(), texSet, m_textureLayout);
+
+  uint16_t base = GetIndexBase(batch);
+  auto pushVertex = [&](glm::vec2 pos, glm::vec2 uv) {
+    batch.vertexData.PushVec2(pos);
+    batch.vertexData.PushVec3(color);
+    batch.vertexData.PushVec2(uv);
+  };
+
+  pushVertex({rec.x, rec.y}, {0.0f, 0.0f});
+  pushVertex({rec.x + rec.width, rec.y}, {1.0f, 0.0f});
+  pushVertex({rec.x + rec.width, rec.y + rec.height}, {1.0f, 1.0f});
+  pushVertex({rec.x, rec.y + rec.height}, {0.0f, 1.0f});
+
+  batch.indices.push_back(base + 0);
+  batch.indices.push_back(base + 1);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 3);
+  batch.indices.push_back(base + 0);
+}
+
+void Renderer2D::DrawSprite(glm::vec2 pos, glm::vec2 size, glm::vec3 tint){
+  DrawSprite({pos.x, pos.y, size.x, size.y}, tint);
+}
+
+void Renderer2D::DrawSprite(Rectangle rec, glm::vec3 tint){
+  uint32_t imgIdx = m_rhi.GetImageIndex();
+  VkDescriptorSet textureSet = m_textureDescriptorSets[imgIdx]->GetSet();
+  Batch& batch = GetBatch(m_texturePipeline.get(), textureSet, m_textureLayout);
+
+  uint16_t base = GetIndexBase(batch);
+
+  auto pushVertex = [&](glm::vec2 pos, glm::vec2 uv) {
+    batch.vertexData.PushVec2(pos);
+    batch.vertexData.PushVec3(tint);
     batch.vertexData.PushVec2(uv);
   };
 
@@ -135,9 +245,11 @@ void Renderer2D::DrawRoundedRect(glm::vec2 pos, glm::vec2 size, float roundness,
 }
 
 void Renderer2D::DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color){
-  Batch& batch = GetBatch(m_roundedRectPipeline.get(), m_roundedRectLayout);
+  uint32_t imgIdx = m_rhi.GetImageIndex();
+  VkDescriptorSet defaultSet = m_descriptorSets[imgIdx]->GetSet();
+  Batch& batch = GetBatch(m_roundedRectPipeline.get(), defaultSet, m_roundedRectLayout);
 
-  uint16_t base = static_cast<uint16_t>(batch.vertexData.Size() / batch.vertexLayout.GetStride());
+  uint16_t base = GetIndexBase(batch);
 
   glm::vec2 size = {rec.width, rec.height};
   glm::vec2 half = size * 0.5f;
@@ -164,9 +276,11 @@ void Renderer2D::DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color
 }
 
 void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 color){
-  Batch& batch = GetBatch(m_pipeline.get(), m_rectLayout);
+  uint32_t imgIdx = m_rhi.GetImageIndex();
+  VkDescriptorSet defaultSet = m_descriptorSets[imgIdx]->GetSet();
+  Batch& batch = GetBatch(m_pipeline.get(), defaultSet, m_rectLayout);
 
-  uint16_t base = static_cast<uint16_t>(batch.vertexData.Size() / batch.vertexLayout.GetStride());
+  uint16_t base = GetIndexBase(batch);
 
   glm::vec2 dir = glm::normalize(to - from);
   glm::vec2 normal = {-dir.y, dir.x};
@@ -196,6 +310,10 @@ void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, glm::vec3 color){
   DrawLine(from, to, 1, color);
 }
 
+uint16_t Renderer2D::GetIndexBase(Batch& batch){
+  return static_cast<uint16_t>(batch.vertexData.Size() / batch.vertexLayout.GetStride());
+}
+
 void Renderer2D::End(){
   uint32_t imgIdx = m_rhi.GetImageIndex();
   VkExtent2D extent = m_rhi.GetExtent();
@@ -211,20 +329,19 @@ void Renderer2D::End(){
   }
 }
 
-void Renderer2D::FlushBatch(Batch& batch){
-  if(batch.indices.empty()) return;
+void Renderer2D::FlushBatch(Batch& batch) {
+  if (batch.indices.empty()) return;
 
   batch.mesh.SetData(batch.vertexData.Data(), batch.vertexData.Size(), batch.indices);
 
   CommandBuffer& cmd = m_rhi.GetCommandBufferObject();
   cmd.BindPipeline(batch.pipeline->GetPipeline());
 
-  uint32_t imgIndx = m_rhi.GetImageIndex();
-  VkDescriptorSet set = m_descriptorSets[imgIndx]->GetSet();
   vkCmdBindDescriptorSets(
     cmd.GetHandler(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-    batch.pipeline->GetPipelineLayout(), 0, 1, &set, 0, nullptr
+    batch.pipeline->GetPipelineLayout(), 0, 1, &batch.descriptorSet, 0, nullptr
   );
+
   batch.mesh.Bind(cmd);
   cmd.DrawIndexed(batch.mesh.GetIndexCount());
 }
@@ -255,6 +372,30 @@ Pipeline& Renderer2D::GetPipelineFromHandle(PipelineHandle handle){
     return *m_pipelines[handle.index];
 
   return *m_pipeline;
+}
+
+TextureHandle Renderer2D::LoadTexture(const std::string& textureName){
+  auto it = m_textureLookup.find(textureName);
+
+  if(it != m_textureLookup.end()){
+    return TextureHandle{ it->second };
+  }
+
+  auto texture = std::make_unique<Texture>(
+    m_rhi.GetDeviceObject(), m_rhi.GetCommandPool(), textureName
+  );
+
+  uint32_t newId = static_cast<uint32_t>(m_textures.size());
+  m_textures.push_back(std::move(texture));
+  m_textureLookup[textureName] = newId;
+
+  return TextureHandle{ newId };
+}
+
+Texture& Renderer2D::GetTextureFromHandle(TextureHandle handle){
+  if (handle.index < m_textures.size() && m_textures[handle.index])
+    return *m_textures[handle.index];
+  return *m_defaultTexture;
 }
 
 }

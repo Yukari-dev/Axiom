@@ -2,6 +2,7 @@
 #include "buffer.hpp"
 #include <stb/stb_image.h>
 #include <stdexcept>
+#include <string>
 
 namespace Axiom {
 
@@ -13,8 +14,10 @@ Texture::Texture(
 
   int width, height, channels;
 
-  stbi_uc *pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-  if(!pixels) throw std::runtime_error("Failed to load texture: " + path);
+  std::string fullPath = std::string(AXIOM_TEXTURE_DIR) + path;
+
+  stbi_uc *pixels = stbi_load(fullPath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+  if(!pixels) throw std::runtime_error("Failed to load texture: " + fullPath);
 
   VkDeviceSize size = width * height * 4;
   Buffer staging(
