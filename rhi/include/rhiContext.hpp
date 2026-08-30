@@ -1,10 +1,8 @@
 #pragma once
 #include "commandPool.hpp"
-#include "descriptorSetLayout.hpp"
 #include "device.hpp"
 #include "framebuffer.hpp"
 #include "instance.hpp"
-#include "pipeline.hpp"
 #include "renderPass.hpp"
 #include "surface.hpp"
 #include "swapchain.hpp"

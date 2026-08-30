@@ -13,6 +13,14 @@ public:
     VkCommandPool commandPool,
     const std::string& path
   );
+  Texture(
+    Device& device,
+    VkCommandPool commandPool,
+    const uint8_t* pixels,
+    uint32_t width,
+    uint32_t height,
+    VkFormat format = VK_FORMAT_R8_UNORM
+  );
   ~Texture();
 
   Texture(const Texture&) = delete;
@@ -22,8 +30,8 @@ public:
   VkImageView GetImageView() const { return m_imageView; }
 
 private:
-  void CreateImage(uint32_t width, uint32_t height, unsigned char *pixels, VkDeviceSize size);
-  void CreateImageView();
+  void CreateImage(uint32_t width, uint32_t height, VkFormat format);
+  void CreateImageView(VkFormat format);
   void CreateSampler();
   void CopyBufferToImage(VkBuffer buffer, uint32_t width, uint32_t height);
   void TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout);

@@ -1,5 +1,6 @@
 #include "renderer2d.hpp"
 #include "mesh.hpp"
+#include <cstring>
 
 namespace Axiom{
 
@@ -27,7 +28,6 @@ Renderer2D::Renderer2D(RhiContext& ctx) : m_rhi(ctx){
   );
   m_customLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
   m_customLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
-  m_customLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
   m_customLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
 
   m_textureLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
@@ -240,6 +240,62 @@ void Renderer2D::DrawSprite(Rectangle rec, glm::vec3 tint){
   batch.indices.push_back(base + 0);
 }
 
+void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle) {
+  Texture& texture = GetTextureFromHandle(textureHandle);
+  uint32_t imgIdx = m_rhi.GetImageIndex();
+  VkDescriptorSet texSet = GetOrCreateTextureSet(texture, imgIdx);
+
+  Batch& batch = GetBatch(m_texturePipeline.get(), texSet, m_textureLayout);
+
+  uint16_t base = GetIndexBase(batch);
+  auto pushVertex = [&](glm::vec2 pos, glm::vec2 uv) {
+    batch.vertexData.PushVec2(pos);
+    batch.vertexData.PushVec3(color);
+    batch.vertexData.PushVec2(uv);
+  };
+
+  pushVertex({rec.x, rec.y}, {uvMin.x, uvMin.y});
+  pushVertex({rec.x + rec.width, rec.y}, {uvMax.x, uvMin.y});
+  pushVertex({rec.x + rec.width, rec.y + rec.height}, {uvMax.x, uvMax.y});
+  pushVertex({rec.x, rec.y + rec.height}, {uvMin.x, uvMax.y});
+
+  batch.indices.push_back(base + 0);
+  batch.indices.push_back(base + 1);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 3);
+  batch.indices.push_back(base + 0);
+}
+
+void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle, PipelineHandle pipelineHandle) {
+  Pipeline& pipeline = GetPipelineFromHandle(pipelineHandle);
+  Texture& texture = GetTextureFromHandle(textureHandle);
+
+  uint32_t imgIdx = m_rhi.GetImageIndex();
+  VkDescriptorSet texSet = GetOrCreateTextureSet(texture, imgIdx);
+
+  Batch& batch = GetBatch(&pipeline, texSet, m_textureLayout);
+
+  uint16_t base = GetIndexBase(batch);
+  auto pushVertex = [&](glm::vec2 pos, glm::vec2 uv) {
+    batch.vertexData.PushVec2(pos);
+    batch.vertexData.PushVec3(color);
+    batch.vertexData.PushVec2(uv);
+  };
+
+  pushVertex({rec.x, rec.y}, {uvMin.x, uvMin.y});
+  pushVertex({rec.x + rec.width, rec.y}, {uvMax.x, uvMin.y});
+  pushVertex({rec.x + rec.width, rec.y + rec.height}, {uvMax.x, uvMax.y});
+  pushVertex({rec.x, rec.y + rec.height}, {uvMin.x, uvMax.y});
+
+  batch.indices.push_back(base + 0);
+  batch.indices.push_back(base + 1);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 2);
+  batch.indices.push_back(base + 3);
+  batch.indices.push_back(base + 0);
+}
+
 void Renderer2D::DrawRoundedRect(glm::vec2 pos, glm::vec2 size, float roundness, glm::vec3 color){
   DrawRoundedRect({pos.x, pos.y, size.x, size.y}, roundness, color);
 }
@@ -323,7 +379,7 @@ void Renderer2D::End(){
     static_cast<float>(extent.height), -1.0f, 1.0f
   );
   m_uniformBuffers[imgIdx]->CopyData(&ubo, sizeof(ubo));
-  
+
   for(Batch *batch : m_renderQueue){
     FlushBatch(*batch);
   }
@@ -388,6 +444,22 @@ TextureHandle Renderer2D::LoadTexture(const std::string& textureName){
   uint32_t newId = static_cast<uint32_t>(m_textures.size());
   m_textures.push_back(std::move(texture));
   m_textureLookup[textureName] = newId;
+
+  return TextureHandle{ newId };
+}
+
+TextureHandle Renderer2D::CreateTextureFromData(const uint8_t *pixels, uint32_t width, uint32_t height){
+  auto texture = std::make_unique<Texture>(
+    m_rhi.GetDeviceObject(), 
+    m_rhi.GetCommandPool(), 
+    pixels, 
+    width, 
+    height, 
+    VK_FORMAT_R8_UNORM
+  );
+
+  uint32_t newId = static_cast<uint32_t>(m_textures.size());
+  m_textures.push_back(std::move(texture));
 
   return TextureHandle{ newId };
 }

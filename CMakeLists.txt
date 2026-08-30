@@ -36,6 +36,7 @@ target_compile_definitions(axiom_rhi PRIVATE
 )
 target_compile_definitions(axiom_renderer2d PRIVATE
     AXIOM_SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders/"
+    AXIOM_TEXTURE_DIR="${CMAKE_SOURCE_DIR}/textures/"
 )
 
 add_executable(Axiom main.cpp)

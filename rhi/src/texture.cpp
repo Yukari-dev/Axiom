@@ -28,12 +28,38 @@ Texture::Texture(
   
   stbi_image_free(pixels);
 
-  CreateImage(width, height, nullptr, size);
+  CreateImage(width, height, VK_FORMAT_R8G8B8A8_SRGB);
   TransitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
   CopyBufferToImage(staging.GetBuffer(), width, height);
   TransitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-  CreateImageView();
+  CreateImageView(VK_FORMAT_R8G8B8A8_SRGB);
+  CreateSampler();
+}
+
+Texture::Texture(
+  Device& device,
+  VkCommandPool commandPool,
+  const uint8_t* pixels,
+  uint32_t width,
+  uint32_t height,
+  VkFormat format
+) : m_device(device), m_commandPool(commandPool) {
+  uint32_t bytesPerPixel = (format == VK_FORMAT_R8_UNORM) ? 1 : 4;
+  VkDeviceSize size = width * height * bytesPerPixel;
+
+  Buffer staging(
+      m_device.GetPhysicalDevice(), m_device.GetDevice(), size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
+  staging.CopyData(pixels, size);
+
+  CreateImage(width, height, format);
+  TransitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+  CopyBufferToImage(staging.GetBuffer(), width, height);
+  TransitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+  CreateImageView(format);
   CreateSampler();
 }
 
@@ -44,14 +70,14 @@ Texture::~Texture() {
   vkFreeMemory(m_device.GetDevice(), m_imageMemory, nullptr);
 }
 
-void Texture::CreateImage(uint32_t width, uint32_t height, unsigned char *, VkDeviceSize size){
+void Texture::CreateImage(uint32_t width, uint32_t height, VkFormat format){
   VkImageCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   info.imageType = VK_IMAGE_TYPE_2D;
   info.extent = {width, height, 1};
   info.mipLevels = 1;
   info.arrayLayers = 1;
-  info.format = VK_FORMAT_R8G8B8A8_SRGB;
+  info.format = format;
   info.tiling = VK_IMAGE_TILING_OPTIMAL;
   info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -73,12 +99,12 @@ void Texture::CreateImage(uint32_t width, uint32_t height, unsigned char *, VkDe
   vkBindImageMemory(m_device.GetDevice(), m_image, m_imageMemory, 0);
 }
 
-void Texture::CreateImageView(){
+void Texture::CreateImageView(VkFormat format){
   VkImageViewCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
   info.image = m_image;
   info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-  info.format = VK_FORMAT_R8G8B8A8_SRGB;
+  info.format = format;
   info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   info.subresourceRange.baseArrayLayer = 0;
   info.subresourceRange.baseMipLevel = 0;

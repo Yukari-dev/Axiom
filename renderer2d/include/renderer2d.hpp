@@ -1,6 +1,7 @@
 #pragma once
 #include "buffer.hpp"
 #include "descriptorSet.hpp"
+#include "descriptorSetLayout.hpp"
 #include "mesh.hpp"
 #include "pipeline.hpp"
 #include "rhiContext.hpp"
@@ -56,7 +57,8 @@ public:
   void DrawRect(Rectangle rec, glm::vec3 color, PipelineHandle shaderHandle);
   void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, TextureHandle textureHandle);
   void DrawRect(Rectangle rec, glm::vec3 color, TextureHandle textureHandle);
-
+  void DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle);
+  void DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle, PipelineHandle pipelineHandle);
   void DrawSprite(glm::vec2 pos, glm::vec2 size, glm::vec3 tint);
   void DrawSprite(Rectangle rec, glm::vec3 tint);
 
@@ -71,12 +73,14 @@ public:
 
   PipelineHandle LoadFragShader(const std::string& shaderName);
   TextureHandle LoadTexture(const std::string& textureName);
+  TextureHandle CreateTextureFromData(const uint8_t *pixels, uint32_t width, uint32_t height);
 private:
   void FlushBatch(Batch& batch);
   Batch& GetBatch(Pipeline *pipeline, VkDescriptorSet set, const VertexLayout& layout);
   VkDescriptorSet GetOrCreateTextureSet(Texture& texture, uint32_t imgIdx);
   Pipeline& GetPipelineFromHandle(PipelineHandle handle);
   Texture& GetTextureFromHandle(TextureHandle handle);
+  TextureHandle RegisterTexture(VkImage image, VkDeviceMemory memory, VkImageView imageView, VkSampler sampler);
   uint16_t GetIndexBase(Batch& batch);
 private:
   RhiContext& m_rhi;

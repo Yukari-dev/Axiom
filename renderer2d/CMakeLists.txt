@@ -1,6 +1,7 @@
 add_library(axiom_renderer2d STATIC
   src/renderer2d.cpp
   src/mesh.cpp
+  src/fontRenderer.cpp
 )
 
 target_include_directories(axiom_renderer2d PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
