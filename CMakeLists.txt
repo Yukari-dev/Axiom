@@ -28,37 +28,45 @@ endforeach()
 
 add_custom_target(axiom_shaders DEPENDS ${SPIRV_BINARIES})
 
-add_subdirectory(platform)
-add_subdirectory(rhi)
-add_subdirectory(renderer2d)
-
-add_dependencies(axiom_rhi axiom_shaders)
-add_dependencies(axiom_renderer2d axiom_shaders)
-
-target_compile_definitions(axiom_rhi PRIVATE
-  AXIOM_SHADER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shaders/"
-  AXIOM_TEXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/textures/"
+file(GLOB_RECURSE AXIOM_SOURCES
+  "platform/*.cpp"
+  "rhi/*.cpp"
+  "renderer2d/*.cpp"
 )
 
 add_library(axiom STATIC 
   include/axiom.h
+  ${AXIOM_SOURCES}
 )
 
-target_link_libraries(axiom PUBLIC 
-  axiom_platform 
-  axiom_rhi 
-  axiom_renderer2d
+add_dependencies(axiom axiom_shaders)
+
+target_compile_definitions(axiom PRIVATE
+  AXIOM_SHADER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shaders/"
+  AXIOM_TEXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/textures/"
 )
 
-target_include_directories(axiom PUBLIC 
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/platform>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/renderer2d/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/rhi/include>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/platform>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/renderer2d>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/rhi>
+target_include_directories(axiom 
+  PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/platform>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/renderer2d/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/rhi/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/platform>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/renderer2d>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/rhi>
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/renderer2d/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rhi/src
+)
+
+find_package(Vulkan REQUIRED)
+find_package(glfw3 REQUIRED)
+
+target_link_libraries(axiom PUBLIC
+  Vulkan::Vulkan
+  glfw
 )
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
