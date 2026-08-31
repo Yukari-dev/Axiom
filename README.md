@@ -199,6 +199,18 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 ```
 
+### Compiling
+Make sure you are at the root of the project.
+```sh
+  cmake -B build
+  cmake --build build
+```
+To run the program (replace PROJECT_NAME with the actual name you set in `CMakeLists.txt`
+```sh
+  ./build/PROJECT_NAME
+```
+
+
 ## Roadmap
 
 - [x] Modern Vulkan RHI setup (Instance, Physical/Logical Device, Swapchain, Sync Primitives)
@@ -206,7 +218,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 - [x] SDF Font loading and text layout engine
 - [x] Integrated `glslc` SPIR-V shader compilation in CMake
 - [x] Packaging into a single static library (`libaxiom.a`)
-- [ ] Integration into custom UI Toolkit framework (`AxiomUI`)
 - [ ] Advanced UI clipping rects and stencil masking support
 - [ ] Multi-threaded command buffer generation for complex UI layouts
 
