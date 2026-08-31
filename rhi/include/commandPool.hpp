@@ -18,4 +18,4 @@ private:
   VkCommandPool m_commandPool;
 };
 
-} // namespace Axiom
+}

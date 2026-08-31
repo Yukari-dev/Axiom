@@ -19,4 +19,4 @@ private:
   VkDevice m_device;
 };
 
-} // namespace Axiom
+}

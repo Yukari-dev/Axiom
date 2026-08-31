@@ -23,4 +23,4 @@ private:
   std::string m_title;
 };
 
-} // namespace Axiom
+}

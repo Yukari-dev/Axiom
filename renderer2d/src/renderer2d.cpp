@@ -26,10 +26,6 @@ Renderer2D::Renderer2D(RhiContext& ctx) : m_rhi(ctx){
     "roundedRect2d.vert", "roundedRect2d.frag",
     m_roundedRectLayout
   );
-  m_customLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
-  m_customLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
-  m_customLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
-
   m_textureLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
   m_textureLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
   m_textureLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);

@@ -41,4 +41,4 @@ void Window::PollEvents() {
   glfwPollEvents(); 
 }
 
-} // namespace Axiom
+}

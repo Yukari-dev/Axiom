@@ -179,4 +179,4 @@ Font& FontRenderer::GetFontFromHandle(FontHandle handle) {
   return m_defaultFont;
 }
 
-} // namespace Axiom
+}
