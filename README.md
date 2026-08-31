@@ -120,15 +120,13 @@ Here is a minimal setup initializing a window, setting up the Vulkan RHI context
 #include "axiom.h"
 
 int main() {
-  // 1. Initialize Window & Vulkan RHI Context
+    // 1. Initialize Window & Vulkan RHI Context
+    Axiom::Init();
     int width = 800;
     int height = 600;
     Axiom::Window window(width, height, "Axiom Render Loop");
     Axiom::RhiContext rhiContext(window.GetHandler(), width, height);
     Axiom::Renderer2D renderer(rhiContext);
-    Axiom::FontRenderer fontRenderer(renderer);
-
-    Axiom::FontHandle font = fontRenderer.LoadFont("fonts/JetBrainsMono-Regular.ttf", 64);
 
     while (!window.ShouldClose()) {
       window.PollEvents();
@@ -143,19 +141,11 @@ int main() {
         { 0.2f, 0.8f, 0.4f }// color
       );
 
-      // Draw text
-      fontRenderer.DrawText(
-        "Hello from Axiom!", // text
-        { 100.0f, 300.0f },  // position
-        font,                // font
-        { 1.0f, 1.0f, 1.0f },// color
-        1.0f                 // size (default is 1.0f)
-      );
-
       renderer.End();
       rhiContext.EndFrame();
     }
 
+    Axiom::Shutdown();
     return 0;
 }
 
@@ -165,32 +155,48 @@ int main() {
 Add Axiom to your downstream application's CMakeLists.txt using find_library:
 ```CMake
 
+# Replace ${PROJECT_NAME} with the actual name (e.g. app_project)
 cmake_minimum_required(VERSION 3.20)
-project(AxiomApp LANGUAGES CXX)
+project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find system Vulkan, GLFW, and installed Axiom binary
 find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
 
-find_library(AXIOM_LIB axiom REQUIRED)
-find_path(AXIOM_INCLUDE_DIR axiom.h REQUIRED)
+# 1. Find library strictly in /usr/local/lib
+find_library(AXIOM_LIB 
+    NAMES axiom
+    PATHS /usr/local/lib
+    NO_DEFAULT_PATH
+)
 
-add_executable(AxiomApp src/main.cpp)
+# 2. Find header path strictly in /usr/local/include
+find_path(AXIOM_INCLUDE_DIR 
+    NAMES axiom.h
+    PATHS /usr/local/include
+    NO_DEFAULT_PATH
+)
 
-target_include_directories(AxiomApp PRIVATE
+add_executable(${PROJECT_NAME} src/main.cpp)
+
+# 3. Include subdirectories so axiom.h internal includes resolve
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${AXIOM_INCLUDE_DIR}
     ${AXIOM_INCLUDE_DIR}/platform
     ${AXIOM_INCLUDE_DIR}/renderer2d
     ${AXIOM_INCLUDE_DIR}/rhi
 )
 
-target_link_libraries(AxiomApp PRIVATE
+target_link_libraries(${PROJECT_NAME} PRIVATE
     ${AXIOM_LIB}
     Vulkan::Vulkan
     glfw
 )
+
 ```
 
 ## Roadmap
