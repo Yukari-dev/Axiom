@@ -27,6 +27,8 @@ public:
   void BeginFrame();
   void EndFrame();
 
+  void WaitIdle();
+
   VkDevice GetDevice() const { return m_device->GetDevice(); }
   Device& GetDeviceObject() const { return *m_device; }
   VkPhysicalDevice GetPhysicalDevice() const { return m_device->GetPhysicalDevice(); }

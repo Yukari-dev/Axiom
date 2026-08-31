@@ -94,6 +94,10 @@ void RhiContext::EndFrame(){
     throw std::runtime_error("Failed to present swap chain image");
 }
 
+void RhiContext::WaitIdle(){
+  vkDeviceWaitIdle(m_device->GetDevice());
+}
+
 void RhiContext::RecreateSwapChain(){
   int width = 0, height = 0;
   glfwGetFramebufferSize(m_window, &width, &height);

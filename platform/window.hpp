@@ -16,6 +16,7 @@ public:
   bool ShouldClose();
   GLFWwindow *GetHandler() const { return m_window; }
   void PollEvents();
+  void CloseWindow();
 private:
   void Create();
   GLFWwindow *m_window;
