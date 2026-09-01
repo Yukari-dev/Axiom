@@ -12,6 +12,12 @@ public:
     const std::string& vert, const std::string& frag,
     const VertexLayout& vertexLayout
   );
+  Pipeline(
+    VkDevice device, VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
+    const uint32_t *vertCode, size_t vertCodeSize,
+    const uint32_t *fragCode, size_t fragCodeSize,
+    const VertexLayout& vertexLayout
+  );
   ~Pipeline();
   
   void SetShader(const std::string& vertShader, const std::string& fragShader);
@@ -20,7 +26,8 @@ public:
 private:
   void Create(
     VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
-    const std::string& vert, const std::string& frag,
+    const uint32_t *vertCode, size_t vertCodeSize,
+    const uint32_t *fragCode, size_t fragCodeSize,
     const VertexLayout& vertexLayout
   );
 private:

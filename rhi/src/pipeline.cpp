@@ -1,17 +1,44 @@
 #include "pipeline.hpp"
 #include "shaderModule.hpp"
+#include <fstream>
 #include <stdexcept>
 #include <vector>
 
 namespace Axiom{
 
+static std::vector<uint32_t> ReadFileUint32(const std::string& filename){
+  std::ifstream file(filename, std::ios::ate | std::ios::binary);
+  if(!file.is_open())
+    throw std::runtime_error("Failed to open file: " + filename);
+  size_t fileSize = static_cast<size_t>(file.tellg());
+  std::vector<uint32_t> buffer(fileSize / sizeof(uint32_t));
+  file.seekg(0);
+  file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
+  file.close();
+  return buffer;
+}
+
 Pipeline::Pipeline(
   VkDevice device, VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
   const std::string& vert, const std::string& frag,
   const VertexLayout& vertexLayout
-)
-  : m_device(device){
-  Create(extent, renderPass, layout, vert, frag, vertexLayout);
+) : m_device(device){
+  auto vertCode = ReadFileUint32(vert);
+  auto fragCode = ReadFileUint32(frag);
+  Create(
+    extent, renderPass, layout, 
+    vertCode.data(), vertCode.size() * sizeof(uint32_t), 
+    fragCode.data(), fragCode.size() * sizeof(uint32_t),
+    vertexLayout);
+}
+
+Pipeline::Pipeline(
+  VkDevice device, VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
+  const uint32_t *vertCode, size_t vertCodeSize,
+  const uint32_t *fragCode, size_t fragCodeSize,
+  const VertexLayout& vertexLayout
+) : m_device(device) {
+  Create(extent, renderPass, layout, vertCode, vertCodeSize, fragCode, fragCodeSize, vertexLayout);
 }
 
 Pipeline::~Pipeline(){
@@ -21,11 +48,12 @@ Pipeline::~Pipeline(){
 
 void Pipeline::Create(
   VkExtent2D extent, VkRenderPass renderPass, VkDescriptorSetLayout layout,
-  const std::string& vert, const std::string& frag,
+  const uint32_t *vertCode, size_t vertCodeSize,
+  const uint32_t *fragCode, size_t fragCodeSize,
   const VertexLayout& vertexLayout
 ){
-  ShaderModule vertModule(std::string(AXIOM_SHADER_DIR) + vert + ".spv", m_device);
-  ShaderModule fragModule(std::string(AXIOM_SHADER_DIR) + frag + ".spv", m_device);
+  ShaderModule vertModule(vertCode, vertCodeSize, m_device);
+  ShaderModule fragModule(fragCode, fragCodeSize, m_device);
 
   VkPipelineShaderStageCreateInfo vertShaderInfo{};
   vertShaderInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
