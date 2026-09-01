@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_program(GLSLC glslc REQUIRED)
 
+set(GEN_SHADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders")
+file(MAKE_DIRECTORY ${GEN_SHADER_DIR})
+
 file(GLOB SHADER_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert"
   "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag"
@@ -14,19 +17,27 @@ file(GLOB SHADER_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/shaders/meshes/*.frag"
 )
 
+set(EMBEDDED_HEADERS "")
+
 foreach(SHADER ${SHADER_SOURCES})
   get_filename_component(SHADER_NAME ${SHADER} NAME)
-  set(SPIRV "${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER_NAME}.spv")
+  string(MAKE_C_IDENTIFIER "${SHADER_NAME}" SHADER_VAR_NAME)
+  set(HEADER_OUTPUT "${GEN_SHADER_DIR}/${SHADER_NAME}.spv.h")
+
   add_custom_command(
-    OUTPUT ${SPIRV}
-    COMMAND ${GLSLC} ${SHADER} -o ${SPIRV}
+    OUTPUT ${HEADER_OUTPUT}
+    COMMAND ${CMAKE_COMMAND} -E echo "#pragma once" > ${HEADER_OUTPUT}
+    COMMAND ${CMAKE_COMMAND} -E echo "#include <cstdint>" >> ${HEADER_OUTPUT}
+    COMMAND ${CMAKE_COMMAND} -E echo "static const uint32_t g_${SHADER_VAR_NAME}[] = {" >> ${HEADER_OUTPUT}
+    COMMAND ${GLSLC} -mfmt=num ${SHADER} -o - >> ${HEADER_OUTPUT}
+    COMMAND ${CMAKE_COMMAND} -E echo "};" >> ${HEADER_OUTPUT}
     DEPENDS ${SHADER}
-    COMMENT "Compiling shader ${SHADER_NAME} to SPIR-V"
+    VERBATIM
   )
-  list(APPEND SPIRV_BINARIES ${SPIRV})
+  list(APPEND EMBEDDED_HEADERS ${HEADER_OUTPUT})
 endforeach()
 
-add_custom_target(axiom_shaders DEPENDS ${SPIRV_BINARIES})
+add_custom_target(axiom_shaders DEPENDS ${EMBEDDED_HEADERS})
 
 file(GLOB_RECURSE AXIOM_SOURCES
   "platform/*.cpp"
@@ -42,7 +53,6 @@ add_library(axiom STATIC
 add_dependencies(axiom axiom_shaders)
 
 target_compile_definitions(axiom PRIVATE
-  AXIOM_SHADER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shaders/"
   AXIOM_TEXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/textures/"
 )
 
@@ -57,6 +67,7 @@ target_include_directories(axiom
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/renderer2d>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/rhi>
   PRIVATE
+    ${GEN_SHADER_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/renderer2d/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rhi/src
 )
@@ -70,8 +81,8 @@ target_link_libraries(axiom PUBLIC
 )
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-  add_executable(axiom_sandbox main.cpp)
-  target_link_libraries(axiom_sandbox PRIVATE axiom)
+add_executable(axiom_sandbox main.cpp)
+target_link_libraries(axiom_sandbox PRIVATE axiom)
 endif()
 
 include(GNUInstallDirs)
@@ -85,5 +96,3 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY platform/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/platform FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
 install(DIRECTORY renderer2d/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/renderer2d)
 install(DIRECTORY rhi/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rhi)
-
-install(DIRECTORY shaders/ DESTINATION ${CMAKE_INSTALL_DATADIR}/axiom/shaders FILES_MATCHING PATTERN "*.spv")
