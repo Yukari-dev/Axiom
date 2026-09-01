@@ -114,10 +114,10 @@ Ensure you have a C++20 compliant compiler, CMake, and the Vulkan SDK installed 
 
 Axiom can be consumed either by linking to the installed system library (libaxiom.a) or by including it directly in your project tree.
 #### Basic C++ Example
-
+Create a folder named `src` and put all your `.cpp` files in it, in this example, the following file is not gonna be placed inside `src/` and named main.cpp
 Here is a minimal setup initializing a window, setting up the Vulkan RHI context, and rendering 2D primitives within a render loop:
 ```cpp
-#include "axiom.h"
+#include <axiom.h>
 
 int main() {
     // 1. Initialize Window & Vulkan RHI Context
