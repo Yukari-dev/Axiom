@@ -11,6 +11,7 @@ public:
   ~SwapChain();
 
   VkSwapchainKHR GetSwapChain() const { return m_swapChain; }
+  size_t GetImageCount() const { return m_swapChainImages.size(); }
   std::vector<VkImageView> GetImageViews() const { return m_swapChainImageViews; }
   VkFormat GetFormat() const { return m_swapChainFormat; }
   VkExtent2D GetExtent() const { return m_swapChainExtent; }

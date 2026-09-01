@@ -59,15 +59,13 @@ target_compile_definitions(axiom PRIVATE
 target_include_directories(axiom 
   PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/platform>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/platform/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/renderer2d/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/rhi/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/platform>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/renderer2d>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/rhi>
   PRIVATE
     ${GEN_SHADER_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/platform
     ${CMAKE_CURRENT_SOURCE_DIR}/renderer2d/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rhi/src
 )
@@ -81,8 +79,8 @@ target_link_libraries(axiom PUBLIC
 )
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-add_executable(axiom_sandbox main.cpp)
-target_link_libraries(axiom_sandbox PRIVATE axiom)
+  add_executable(axiom_sandbox main.cpp)
+  target_link_libraries(axiom_sandbox PRIVATE axiom)
 endif()
 
 include(GNUInstallDirs)
@@ -92,7 +90,7 @@ install(TARGETS axiom
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY platform/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/platform FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
-install(DIRECTORY renderer2d/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/renderer2d)
-install(DIRECTORY rhi/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rhi)
+install(FILES include/axiom.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES platform/include/window.hpp platform/include/input.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES renderer2d/include/renderer2d.hpp renderer2d/include/fontRenderer.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES rhi/include/rhiContext.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
