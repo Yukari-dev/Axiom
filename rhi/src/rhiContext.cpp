@@ -1,8 +1,19 @@
 #include "rhiContext.hpp"
+#include "rhiContext.hpp"
+#include "instance.hpp"
+#include "surface.hpp"
+#include "device.hpp"
+#include "swapchain.hpp"
+#include "renderPass.hpp"
+#include "framebuffer.hpp"
+#include "commandPool.hpp"
+#include "commandBuffer.hpp"
 #include "syncObjects.hpp"
 #include <stdexcept>
 #include <vector>
 #include <glm/gtc/matrix_transform.hpp>
+#include <stdexcept>
+#include <vector>
 
 namespace Axiom{
 
@@ -28,6 +39,8 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
     static_cast<uint32_t>(m_swapChain->GetImageViews().size())
   );
 }
+
+RhiContext::~RhiContext() = default;
 
 void RhiContext::BeginFrame(){
   m_inFlightFence = m_syncObjects->GetFence();
@@ -123,5 +136,16 @@ void RhiContext::FramebufferResizeCallback(GLFWwindow *window, int width, int he
   auto* self = reinterpret_cast<RhiContext*>(glfwGetWindowUserPointer(window));
   self->m_framebufferResized = true;
 }
+
+Device& RhiContext::GetDeviceObject() const { return *m_device; }
+CommandPool& RhiContext::GetCommandPoolObject() const { return *m_commandPool; }
+CommandBuffer& RhiContext::GetCommandBufferObject() const { return *m_commandBuffer; }
+RenderPass& RhiContext::GetRenderPassObject() const { return *m_renderPass; }
+SwapChain& RhiContext::GetSwapChainObject() const { return *m_swapChain; }
+Framebuffer& RhiContext::GetFramebufferObject() const { return *m_framebuffer; }
+Instance& RhiContext::GetInstanceObject() const { return *m_instance; }
+Surface& RhiContext::GetSurfaceObject() const { return *m_surface; }
+SyncObjects& RhiContext::GetSyncObjectsObject() const { return *m_syncObjects; }
+uint32_t RhiContext::GetImageIndex() const { return m_imageIndex; }
 
 }

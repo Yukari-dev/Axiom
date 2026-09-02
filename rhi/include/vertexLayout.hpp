@@ -10,15 +10,31 @@ struct VertexAttribute{
   VkFormat format;
 };
 
+enum class VertexFormat{
+  Float, Float2, Float3, Float4
+};
+
 class VertexLayout{
 public:
-  void AddAttribute(VkFormat format){
+  VertexLayout AddAttribute(VkFormat format){
     VertexAttribute attr{};
     attr.offset = m_stride;
     attr.format = format;
     m_attributes.push_back(attr);
     
     m_stride += FormatSize(format);
+    return *this;
+  }
+
+  VertexLayout AddAttribute(VertexFormat format){
+    VertexAttribute attr{};
+    attr.offset = m_stride;
+    VkFormat vkFormat = VertexFormatToVkFormat(format);
+    attr.format = vkFormat;
+    m_attributes.push_back(attr);
+    
+    m_stride += FormatSize(vkFormat);
+    return *this;
   }
 
   uint32_t FormatSize(VkFormat format){
@@ -28,6 +44,16 @@ public:
       case VK_FORMAT_R32G32B32_SFLOAT: return 12;
       case VK_FORMAT_R32G32B32A32_SFLOAT: return 16;
       default: throw std::runtime_error("Unhandled VkFormat in FormatSize");
+    }
+  }
+
+  VkFormat VertexFormatToVkFormat(VertexFormat format){
+    switch(format){
+      case VertexFormat::Float: return VK_FORMAT_R32_SFLOAT;
+      case VertexFormat::Float2: return VK_FORMAT_R32G32_SFLOAT;
+      case VertexFormat::Float3: return VK_FORMAT_R32G32B32_SFLOAT;
+      case VertexFormat::Float4: return VK_FORMAT_R32G32B32A32_SFLOAT;
+      default: throw std::runtime_error("Unhandled Vertex Forma in VertexFormatToVkFormat");
     }
   }
 
