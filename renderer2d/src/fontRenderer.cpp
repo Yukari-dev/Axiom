@@ -111,6 +111,11 @@ FontHandle FontRenderer::LoadFont(const std::string& fontPath, float fontSize) {
   return FontHandle{ newId };
 }
 
+FontHandle FontRenderer::SetDefaultFont(const std::string& fontPath, float fontSize){
+  m_defaultFontHandle = LoadFont(fontPath, fontSize);
+  return m_defaultFontHandle;
+}
+
 void FontRenderer::DrawText(
   const std::string& text, 
   glm::vec2 position, 
@@ -152,6 +157,13 @@ void FontRenderer::DrawText(
   }
 }
 
+void FontRenderer::DrawText(
+  const std::string& text, glm::vec2 position, glm::vec3 color, 
+  float scale
+) {
+  DrawText(text, position, m_defaultFontHandle, color, scale);
+}
+
 glm::vec2 FontRenderer::MeasureText(const std::string& text, FontHandle fontHandle, float scale) {
   Font& font = GetFontFromHandle(fontHandle);
   glm::vec2 size{0.0f, font.lineHeight * scale};
@@ -173,6 +185,10 @@ glm::vec2 FontRenderer::MeasureText(const std::string& text, FontHandle fontHand
 
   size.x = std::max(size.x, currentLineWidth);
   return size;
+}
+
+glm::vec2 FontRenderer::MeasureText(const std::string& text, float scale) {
+  return MeasureText(text, m_defaultFontHandle, scale);
 }
 
 Font& FontRenderer::GetFontFromHandle(FontHandle handle) {

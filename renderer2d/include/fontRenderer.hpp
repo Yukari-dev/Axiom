@@ -31,6 +31,7 @@ public:
   ~FontRenderer() = default;
 
   FontHandle LoadFont(const std::string& fontPath, float fontSize = 48.0f);
+  FontHandle SetDefaultFont(const std::string& fontPath, float fontSize = 48.0f);
 
   void DrawText(
     const std::string& text, 
@@ -40,7 +41,15 @@ public:
     float scale = 1.0f
   );
 
+  void DrawText(
+    const std::string& text, 
+    glm::vec2 position, 
+    glm::vec3 color = glm::vec3(1.0f), 
+    float scale = 1.0f
+  );
+
   glm::vec2 MeasureText(const std::string& text, FontHandle fontHandle, float scale = 1.0f);
+  glm::vec2 MeasureText(const std::string& text, float scale = 1.0f);
 
 private:
   Font& GetFontFromHandle(FontHandle handle);
@@ -48,9 +57,10 @@ private:
 private:
   Renderer2D& m_renderer;
   PipelineHandle m_sdfPipeline{};
+  FontHandle m_defaultFontHandle{};
   std::vector<Font> m_fonts;
   std::unordered_map<std::string, uint32_t> m_fontLookup;
-  Font m_defaultFont;
+  Font m_defaultFont{};
 };
 
 }

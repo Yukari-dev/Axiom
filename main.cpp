@@ -10,7 +10,7 @@ int main(int ac, char **av) {
 
   Axiom::FontRenderer fontRenderer(renderer);
 
-  Axiom::FontHandle font = fontRenderer.LoadFont("fonts/JetBrainsMono-Regular.ttf", 64);
+  fontRenderer.SetDefaultFont("fonts/JetBrainsMono-Regular.ttf", 64);
 
   while (!window.ShouldClose()){
     window.PollEvents();
@@ -30,9 +30,9 @@ int main(int ac, char **av) {
     }
     renderer.DrawRect({0, 0}, {1200, 600}, color);
     
-    glm::vec2 textSize = fontRenderer.MeasureText("Hello world", font, 3);
+    glm::vec2 textSize = fontRenderer.MeasureText("Hello world", 3);
     fontRenderer.DrawText(
-      "Hello world", {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, font, textColor, 3);
+      "Hello world", {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 3);
     renderer.End();
     rhi.EndFrame();
   }
