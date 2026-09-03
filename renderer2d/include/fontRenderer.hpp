@@ -19,6 +19,8 @@ struct Font {
   TextureHandle atlasTexture{};
   std::unordered_map<char, Glyph> glyphs;
   float lineHeight{0.0f};
+  float ascent{0.0f};
+  float descent{0.0f};
 };
 
 struct FontHandle {

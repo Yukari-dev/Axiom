@@ -43,8 +43,13 @@ FontHandle FontRenderer::LoadFont(const std::string& fontPath, float fontSize) {
 
   Font font{};
   font.lineHeight = fontSize;
-
   float fontScale = stbtt_ScaleForPixelHeight(&fontInfo, fontSize);
+  int ascentRaw, descentRaw, lineGapRaw;
+  stbtt_GetFontVMetrics(&fontInfo, &ascentRaw, &descentRaw, &lineGapRaw);
+
+  font.ascent = ascentRaw * fontScale;
+  font.descent = descentRaw * fontScale;
+  font.lineHeight = (ascentRaw - descentRaw + lineGapRaw) * fontScale;
 
   int padding = 5;
   uint8_t onedgeValue = 128;
@@ -125,6 +130,7 @@ void FontRenderer::DrawText(
 ) {
   Font& font = GetFontFromHandle(fontHandle);
   glm::vec2 cursor = position;
+  cursor.y += font.ascent * scale;
 
   for (char c : text) {
     if (c == '\n') {
