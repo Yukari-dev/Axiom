@@ -1,14 +1,17 @@
 #include "fontRenderer.hpp"
+#include <iostream>
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb/stb_truetype.h>
 #include <fstream>
 #include <stdexcept>
 #include <algorithm>
 
+#include "sdf_font.frag.spv.h"
+
 namespace Axiom {
 
 FontRenderer::FontRenderer(Renderer2D& renderer) : m_renderer(renderer) {
-  m_sdfPipeline = m_renderer.LoadFragShader("sdf_font.frag");
+  m_sdfPipeline = m_renderer.LoadFragShader("sdf_font.frag", g_sdf_font_frag, sizeof(g_sdf_font_frag));
 }
 
 FontHandle FontRenderer::LoadFont(const std::string& fontPath, float fontSize) {

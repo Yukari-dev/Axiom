@@ -54,6 +54,7 @@ public:
   void End();
 
   PipelineHandle LoadFragShader(const std::string& shaderName);
+  PipelineHandle LoadFragShader(const std::string& shaderName, const uint32_t *code, size_t size);
   TextureHandle LoadTexture(const std::string& textureName);
   TextureHandle CreateTextureFromData(const uint8_t* pixels, uint32_t width, uint32_t height);
 

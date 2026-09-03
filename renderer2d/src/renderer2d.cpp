@@ -514,6 +514,28 @@ PipelineHandle Renderer2D::LoadFragShader(const std::string& shaderName) {
   return PipelineHandle{ newId };
 }
 
+PipelineHandle Renderer2D::LoadFragShader(const std::string& shaderName, const uint32_t *code, size_t size){
+  auto it = m_impl->m_pipelineLookup.find(shaderName);
+
+  if (it != m_impl->m_pipelineLookup.end()) {
+    return PipelineHandle{ it->second };
+  }
+
+  auto pipeline = std::make_unique<Pipeline>(
+    m_impl->m_rhi.GetDeviceObject().GetDevice(), m_impl->m_rhi.GetSwapChainObject().GetExtent(), m_impl->m_rhi.GetRenderPassObject().GetRenderPass(),
+    m_impl->m_descriptorSetLayout->GetDescriptorSetLayout(),
+    g_texture2d_vert, sizeof(g_texture2d_vert),
+    code, size,
+    m_impl->m_textureLayout
+  );
+
+  uint32_t newId = static_cast<uint32_t>(m_impl->m_pipelines.size());
+  m_impl->m_pipelines.push_back(std::move(pipeline));
+  m_impl->m_pipelineLookup[shaderName] = newId;
+
+  return PipelineHandle{ newId };
+}
+
 TextureHandle Renderer2D::LoadTexture(const std::string& textureName) {
   auto it = m_impl->m_textureLookup.find(textureName);
 
