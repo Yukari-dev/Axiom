@@ -9,6 +9,7 @@
 namespace Axiom {
 
 class RhiContext;
+struct FontHandle;
 
 struct Rectangle {
   float x, y, width, height;
@@ -51,13 +52,26 @@ public:
   void DrawLine(glm::vec2 from, glm::vec2 to, glm::vec3 color);
   void DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 color);
 
+  void DrawText(
+    const std::string& text, glm::vec2 position, FontHandle fontHandle, 
+    glm::vec3 color = glm::vec3(1.0f), float scale = 1.0f
+  );
+
+  void DrawText(
+    const std::string& text, glm::vec2 position, 
+    glm::vec3 color = glm::vec3(1.0f), float scale = 1.0f
+  );
+
+  glm::vec2 MeasureText(const std::string& text, FontHandle fontHandle, float scale = 1.0f);
+  glm::vec2 MeasureText(const std::string& text, float scale = 1.0f);
+
   void End();
 
   PipelineHandle LoadFragShader(const std::string& shaderName);
   PipelineHandle LoadFragShader(const std::string& shaderName, const uint32_t *code, size_t size);
   TextureHandle LoadTexture(const std::string& textureName);
   TextureHandle CreateTextureFromData(const uint8_t* pixels, uint32_t width, uint32_t height);
-
+  FontHandle SetDefaultFont(const std::string& name, float fontSize = 48.f);
 private:
   struct Impl;
   std::unique_ptr<Impl> m_impl;

@@ -7,10 +7,7 @@ int main(int ac, char **av) {
   Axiom::Input input(window.GetHandler());
   Axiom::RhiContext rhi(window.GetHandler(), 1200, 600);
   Axiom::Renderer2D renderer(rhi);
-
-  Axiom::FontRenderer fontRenderer(renderer);
-
-  fontRenderer.SetDefaultFont("fonts/JetBrainsMono-Regular.ttf", 64);
+  renderer.SetDefaultFont("fonts/JetBrainsMono-Regular.ttf", 64.0f);
 
   while (!window.ShouldClose()){
     window.PollEvents();
@@ -30,9 +27,8 @@ int main(int ac, char **av) {
     }
     renderer.DrawRect({0, 0}, {1200, 600}, color);
     
-    glm::vec2 textSize = fontRenderer.MeasureText("Hello world", 3);
-    fontRenderer.DrawText(
-      "Hello world", {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 3);
+    glm::vec2 textSize = renderer.MeasureText("Hello world", 3);
+    renderer.DrawText("Hello world", {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 3);
     renderer.End();
     rhi.EndFrame();
   }

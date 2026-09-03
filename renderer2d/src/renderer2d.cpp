@@ -1,6 +1,7 @@
 #include "renderer2d.hpp"
 #include "descriptorSet.hpp"
 #include "descriptorSetLayout.hpp"
+#include "fontRenderer.hpp"
 #include "rhiContext.hpp"
 #include "commandPool.hpp"
 #include "swapchain.hpp"
@@ -48,6 +49,7 @@ struct Renderer2D::Impl {
   std::vector<std::unique_ptr<DescriptorSet>> m_textureDescriptorSets;
   std::map<std::pair<Texture*, uint32_t>, std::unique_ptr<DescriptorSet>> m_textureSets;
   std::unique_ptr<Texture> m_defaultTexture{nullptr};
+  std::unique_ptr<FontRenderer> m_fontRenderer{nullptr};
 
   std::vector<std::unique_ptr<Pipeline>> m_pipelines;
   std::unordered_map<std::string, uint32_t> m_pipelineLookup;
@@ -74,6 +76,7 @@ struct Renderer2D::Impl {
 
   explicit Impl(RhiContext& ctx) : m_rhi(ctx) {
     m_descriptorSetLayout = std::make_unique<DescriptorSetLayout>(m_rhi.GetDeviceObject().GetDevice());
+  
 
     m_rectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
     m_rectLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
@@ -216,7 +219,9 @@ struct Renderer2D::Impl {
 };
 
 Renderer2D::Renderer2D(RhiContext& ctx)
-  : m_impl(std::make_unique<Impl>(ctx)) {}
+  : m_impl(std::make_unique<Impl>(ctx)) {
+  m_impl->m_fontRenderer = std::make_unique<FontRenderer>(*this);
+}
 
 Renderer2D::~Renderer2D() = default;
 
@@ -477,6 +482,26 @@ void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, glm::vec3 color) {
   DrawLine(from, to, 1.0f, color);
 }
 
+void Renderer2D::DrawText(
+  const std::string& text, glm::vec2 position, FontHandle fontHandle, 
+  glm::vec3 color, float scale){
+  m_impl->m_fontRenderer->DrawText(text, position, fontHandle, color, scale);
+}
+
+void Renderer2D::DrawText(
+  const std::string& text, glm::vec2 position, 
+  glm::vec3 color, float scale){
+  m_impl->m_fontRenderer->DrawText(text, position, color, scale);
+}
+
+glm::vec2 Renderer2D::MeasureText(const std::string& text, FontHandle fontHandle, float scale){
+  return m_impl->m_fontRenderer->MeasureText(text, fontHandle, scale);
+}
+
+glm::vec2 Renderer2D::MeasureText(const std::string& text, float scale){
+  return m_impl->m_fontRenderer->MeasureText(text, scale);
+}
+
 void Renderer2D::End() {
   uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
   VkExtent2D extent = m_impl->m_rhi.GetSwapChainObject().GetExtent();
@@ -568,6 +593,10 @@ TextureHandle Renderer2D::CreateTextureFromData(const uint8_t* pixels, uint32_t 
   m_impl->m_textures.push_back(std::move(texture));
 
   return TextureHandle{ newId };
+}
+
+FontHandle Renderer2D::SetDefaultFont(const std::string& name, float fontSize){
+  return m_impl->m_fontRenderer->SetDefaultFont(name, fontSize);
 }
 
 }
