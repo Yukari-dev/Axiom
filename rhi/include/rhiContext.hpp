@@ -39,24 +39,35 @@ public:
   uint32_t GetImageIndex() const;
   using ResizeCallback = std::function<void(int, int)>;
   void SetResizeCallback(ResizeCallback callback);
+
+  using CursorPosCallback = std::function<void(double, double)>;
+  void SetCursorPosCallback(CursorPosCallback callback);
+
+  using MouseButtonCallback = std::function<void(int, int, int)>;
+  void SetMouseButtonCallback(MouseButtonCallback callback);
 private:
   static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
+  static void CursorposCallback(GLFWwindow *window, double xpos, double ypos);
+  static void MouseButtonInternalCallback(GLFWwindow *window, int button, int actions, int modes);
+
   void RecreateSwapChain();
 
   GLFWwindow* m_window{nullptr};
   VkFence m_inFlightFence{};
   bool m_framebufferResized{false};
   uint32_t m_imageIndex{0};
-  std::unique_ptr<Instance> m_instance;
-  std::unique_ptr<Surface> m_surface;
-  std::unique_ptr<Device> m_device;
-  std::unique_ptr<SwapChain> m_swapChain;
-  std::unique_ptr<RenderPass> m_renderPass;
-  std::unique_ptr<Framebuffer> m_framebuffer;
-  std::unique_ptr<CommandPool> m_commandPool;
-  std::unique_ptr<CommandBuffer> m_commandBuffer;
-  std::unique_ptr<SyncObjects> m_syncObjects;
-  ResizeCallback m_userResizeCallback;
+  std::unique_ptr<Instance> m_instance{nullptr};
+  std::unique_ptr<Surface> m_surface{nullptr};
+  std::unique_ptr<Device> m_device{nullptr};
+  std::unique_ptr<SwapChain> m_swapChain{nullptr};
+  std::unique_ptr<RenderPass> m_renderPass{nullptr};
+  std::unique_ptr<Framebuffer> m_framebuffer{nullptr};
+  std::unique_ptr<CommandPool> m_commandPool{nullptr};
+  std::unique_ptr<CommandBuffer> m_commandBuffer{nullptr};
+  std::unique_ptr<SyncObjects> m_syncObjects{nullptr};
+  ResizeCallback m_userResizeCallback{};
+  CursorPosCallback m_userCursorPosCallback{};
+  MouseButtonCallback m_userMouseButtonCallback{};
 };
 
 }

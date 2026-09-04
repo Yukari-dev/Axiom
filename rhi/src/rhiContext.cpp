@@ -1,5 +1,4 @@
 #include "rhiContext.hpp"
-#include "rhiContext.hpp"
 #include "instance.hpp"
 #include "surface.hpp"
 #include "device.hpp"
@@ -20,6 +19,8 @@ namespace Axiom{
 RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(window){
   glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
+  glfwSetCursorPosCallback(window, CursorposCallback);
+  glfwSetMouseButtonCallback(window, MouseButtonInternalCallback);
   m_instance = std::make_unique<Instance>();
   m_surface = std::make_unique<Surface>(m_instance->GetInstance(), m_window);
   m_device = std::make_unique<Device>(m_instance->GetInstance(), m_surface->GetSurface());
@@ -136,12 +137,32 @@ void RhiContext::SetResizeCallback(ResizeCallback callback) {
   m_userResizeCallback = std::move(callback);
 }
 
+void RhiContext::SetCursorPosCallback(CursorPosCallback callback) {
+  m_userCursorPosCallback = std::move(callback);
+}
+
+void RhiContext::SetMouseButtonCallback(MouseButtonCallback callback) {
+  m_userMouseButtonCallback = std::move(callback);
+}
+
 void RhiContext::FramebufferResizeCallback(GLFWwindow *window, int width, int height){
   auto* self = reinterpret_cast<RhiContext*>(glfwGetWindowUserPointer(window));
   self->m_framebufferResized = true;
   if (self->m_userResizeCallback) {
     self->m_userResizeCallback(width, height);
   }
+}
+
+void RhiContext::CursorposCallback(GLFWwindow *window, double x, double y){
+  auto *self =reinterpret_cast<RhiContext*>(glfwGetWindowUserPointer(window));
+  if(self->m_userCursorPosCallback)
+    self->m_userCursorPosCallback(x, y);
+}
+
+void RhiContext::MouseButtonInternalCallback(GLFWwindow *window, int button, int actions, int modes){
+  auto *self = static_cast<RhiContext*>(glfwGetWindowUserPointer(window));
+  if (self && self->m_userMouseButtonCallback)
+    self->m_userMouseButtonCallback(button, actions, modes);
 }
 
 Device& RhiContext::GetDeviceObject() const { return *m_device; }
