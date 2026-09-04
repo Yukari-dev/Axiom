@@ -17,6 +17,8 @@ public:
   GLFWwindow *GetHandler() const { return m_window; }
   void PollEvents();
   void CloseWindow();
+  int GetWidth() const { return m_width; }
+  int GetHeight() const { return m_height; }
 private:
   void Create();
   GLFWwindow *m_window;

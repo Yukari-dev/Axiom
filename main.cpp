@@ -5,7 +5,7 @@ int main(int ac, char **av) {
 
   Axiom::Window window(1200, 600, "Axiom");
   Axiom::Input input(window.GetHandler());
-  Axiom::RhiContext rhi(window.GetHandler(), 1200, 600);
+  Axiom::RhiContext rhi(window.GetHandler(), window.GetWidth(), window.GetHeight());
   Axiom::Renderer2D renderer(rhi);
   renderer.SetDefaultFont("fonts/JetBrainsMono-Regular.ttf", 64.0f);
 
