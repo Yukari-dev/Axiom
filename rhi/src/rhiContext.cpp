@@ -132,9 +132,16 @@ void RhiContext::RecreateSwapChain(){
   );
 }
 
+void RhiContext::SetResizeCallback(ResizeCallback callback) {
+  m_userResizeCallback = std::move(callback);
+}
+
 void RhiContext::FramebufferResizeCallback(GLFWwindow *window, int width, int height){
   auto* self = reinterpret_cast<RhiContext*>(glfwGetWindowUserPointer(window));
   self->m_framebufferResized = true;
+  if (self->m_userResizeCallback) {
+    self->m_userResizeCallback(width, height);
+  }
 }
 
 Device& RhiContext::GetDeviceObject() const { return *m_device; }

@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 #include <memory>
 #include <cstdint>
 
@@ -36,6 +37,8 @@ public:
   Surface& GetSurfaceObject() const;
   SyncObjects& GetSyncObjectsObject() const;
   uint32_t GetImageIndex() const;
+  using ResizeCallback = std::function<void(int, int)>;
+  void SetResizeCallback(ResizeCallback callback);
 private:
   static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
   void RecreateSwapChain();
@@ -53,6 +56,7 @@ private:
   std::unique_ptr<CommandPool> m_commandPool;
   std::unique_ptr<CommandBuffer> m_commandBuffer;
   std::unique_ptr<SyncObjects> m_syncObjects;
+  ResizeCallback m_userResizeCallback;
 };
 
 }
