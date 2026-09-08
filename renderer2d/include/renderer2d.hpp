@@ -43,6 +43,10 @@ public:
   void DrawRect(Rectangle rec, glm::vec3 color, TextureHandle textureHandle);
   void DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle);
   void DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle, PipelineHandle pipelineHandle);
+  void DrawRectLine(Rectangle rec, float thickness, glm::vec3 color);
+
+  void DrawPolygon(const std::vector<glm::vec2>& points, glm::vec3 color);
+
   void DrawSprite(glm::vec2 pos, glm::vec2 size, glm::vec3 tint);
   void DrawSprite(Rectangle rec, glm::vec3 tint);
 

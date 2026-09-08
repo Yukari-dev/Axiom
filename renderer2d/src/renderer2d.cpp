@@ -412,6 +412,33 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::
   batch.indices.push_back(base + 0);
 }
 
+void Renderer2D::DrawRectLine(Rectangle rec, float thickness, glm::vec3 color){
+  DrawLine({rec.x, rec.y}, {rec.x + rec.width, rec.y}, thickness, color);
+  DrawLine({rec.x + rec.width, rec.y}, {rec.x + rec.width, rec.y + rec.height}, thickness, color);
+  DrawLine({rec.x, rec.y}, {rec.x, rec.y + rec.height}, thickness, color);
+  DrawLine({rec.x, rec.y + rec.height}, {rec.x + rec.width, rec.y + rec.height}, thickness, color);
+}
+
+void Renderer2D::DrawPolygon(const std::vector<glm::vec2>& points, glm::vec3 color){
+  if(points.size() < 3) return;
+  uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
+  VkDescriptorSet defaultSet = m_impl->m_descriptorSets[imgIdx]->GetSet();
+  Batch& batch = m_impl->GetBatch(m_impl->m_pipeline.get(), defaultSet, m_impl->m_rectLayout);
+
+  uint32_t base = m_impl->GetIndexBase(batch);
+
+  for(const auto& point : points){
+    batch.vertexData.PushVec2(point);
+    batch.vertexData.PushVec3(color);
+  }
+  
+  for(uint16_t i = 1; i + 1 < points.size(); i++){
+    batch.indices.push_back(base);
+    batch.indices.push_back(base + i);
+    batch.indices.push_back(base + i + 1);
+  }
+}
+
 void Renderer2D::DrawRoundedRect(glm::vec2 pos, glm::vec2 size, float roundness, glm::vec3 color) {
   DrawRoundedRect({pos.x, pos.y, size.x, size.y}, roundness, color);
 }
