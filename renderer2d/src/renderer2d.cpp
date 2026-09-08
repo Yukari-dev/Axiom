@@ -626,4 +626,8 @@ void Renderer2D::SetDefaultFont(const std::string& name, float fontSize){
   m_impl->m_fontRenderer->SetDefaultFont(name, fontSize);
 }
 
+void Renderer2D::ChangeDefautlFont(float size){
+  m_impl->m_fontRenderer->ChangeDefaultFontSize(size);
+}
+
 }

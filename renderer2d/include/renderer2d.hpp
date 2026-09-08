@@ -76,6 +76,7 @@ public:
   TextureHandle LoadTexture(const std::string& textureName);
   TextureHandle CreateTextureFromData(const uint8_t* pixels, uint32_t width, uint32_t height);
   void SetDefaultFont(const std::string& name, float fontSize = 48.f);
+  void ChangeDefautlFont(float size);
 private:
   struct Impl;
   std::unique_ptr<Impl> m_impl;

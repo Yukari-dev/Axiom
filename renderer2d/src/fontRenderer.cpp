@@ -15,7 +15,8 @@ FontRenderer::FontRenderer(Renderer2D& renderer) : m_renderer(renderer) {
 }
 
 FontHandle FontRenderer::LoadFont(const std::string& fontPath, float fontSize) {
-  auto it = m_fontLookup.find(fontPath);
+  std::string cacheKey = fontPath + "_" + std::to_string(fontSize);
+  auto it = m_fontLookup.find(cacheKey);
   if (it != m_fontLookup.end()) {
     return FontHandle{ it->second };
   }
@@ -111,14 +112,20 @@ FontHandle FontRenderer::LoadFont(const std::string& fontPath, float fontSize) {
 
   uint32_t newId = static_cast<uint32_t>(m_fonts.size());
   m_fonts.push_back(std::move(font));
-  m_fontLookup[fontPath] = newId;
+  m_fontLookup[cacheKey] = newId;
 
   return FontHandle{ newId };
 }
 
 FontHandle FontRenderer::SetDefaultFont(const std::string& fontPath, float fontSize){
-  m_defaultFontHandle = LoadFont(fontPath, fontSize);
+  m_defaultFontPath = fontPath;
+  m_defaultFontHandle = LoadFont(m_defaultFontPath, fontSize);
   return m_defaultFontHandle;
+}
+
+void FontRenderer::ChangeDefaultFontSize(float size){
+  if(m_defaultFontPath.empty()) return;
+  m_defaultFontHandle = LoadFont(m_defaultFontPath, size);
 }
 
 void FontRenderer::DrawText(

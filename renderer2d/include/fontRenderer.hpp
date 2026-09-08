@@ -34,6 +34,7 @@ public:
 
   FontHandle LoadFont(const std::string& fontPath, float fontSize = 48.0f);
   FontHandle SetDefaultFont(const std::string& fontPath, float fontSize = 48.0f);
+  void ChangeDefaultFontSize(float size);
 
   void DrawText(
     const std::string& text, 
@@ -59,10 +60,11 @@ private:
 private:
   Renderer2D& m_renderer;
   PipelineHandle m_sdfPipeline{};
-  FontHandle m_defaultFontHandle{};
   std::vector<Font> m_fonts;
   std::unordered_map<std::string, uint32_t> m_fontLookup;
   Font m_defaultFont{};
+  FontHandle m_defaultFontHandle{};
+  std::string m_defaultFontPath{};
 };
 
 }
