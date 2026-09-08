@@ -75,7 +75,7 @@ public:
   PipelineHandle LoadFragShader(const std::string& shaderName, const uint32_t *code, size_t size);
   TextureHandle LoadTexture(const std::string& textureName);
   TextureHandle CreateTextureFromData(const uint8_t* pixels, uint32_t width, uint32_t height);
-  FontHandle SetDefaultFont(const std::string& name, float fontSize = 48.f);
+  void SetDefaultFont(const std::string& name, float fontSize = 48.f);
 private:
   struct Impl;
   std::unique_ptr<Impl> m_impl;

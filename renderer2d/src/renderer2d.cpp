@@ -622,8 +622,8 @@ TextureHandle Renderer2D::CreateTextureFromData(const uint8_t* pixels, uint32_t 
   return TextureHandle{ newId };
 }
 
-FontHandle Renderer2D::SetDefaultFont(const std::string& name, float fontSize){
-  return m_impl->m_fontRenderer->SetDefaultFont(name, fontSize);
+void Renderer2D::SetDefaultFont(const std::string& name, float fontSize){
+  m_impl->m_fontRenderer->SetDefaultFont(name, fontSize);
 }
 
 }
