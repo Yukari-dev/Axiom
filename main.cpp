@@ -30,9 +30,11 @@ int main(int ac, char **av) {
     // glm::vec2 textSize = renderer.MeasureText("Hello world", 3);
     // renderer.DrawText("Hello world", {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 3);
   
-    renderer.DrawPolygon({
-      {400, 100}, {500, 200}, {450, 350}, {350, 350}, {300, 200}
-    }, glm::vec3{1.0f});
+    // renderer.DrawPolygon({
+    //   {400, 100}, {500, 200}, {450, 350}, {350, 350}, {300, 200}
+    // }, glm::vec3{1.0f});
+
+    renderer.DrawRectLine({100, 100, 300, 300}, 4, glm::vec3{1.0f});
 
     renderer.End();
     rhi.EndFrame();

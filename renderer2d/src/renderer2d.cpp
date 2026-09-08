@@ -412,6 +412,13 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::
   batch.indices.push_back(base + 0);
 }
 
+void Renderer2D::DrawRectLine(Rectangle rec, float thickness, glm::vec3 color){
+  DrawLine({rec.x, rec.y}, {rec.x + rec.width, rec.y}, thickness, color);
+  DrawLine({rec.x + rec.width, rec.y}, {rec.x + rec.width, rec.y + rec.height}, thickness, color);
+  DrawLine({rec.x, rec.y}, {rec.x, rec.y + rec.height}, thickness, color);
+  DrawLine({rec.x, rec.y + rec.height}, {rec.x + rec.width, rec.y + rec.height}, thickness, color);
+}
+
 void Renderer2D::DrawPolygon(const std::vector<glm::vec2>& points, glm::vec3 color){
   if(points.size() < 3) return;
   uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
