@@ -48,11 +48,15 @@ public:
 
   using KeyboardCallback = std::function<void(int, int, int, int)>;
   void SetKeyboardCallback(KeyboardCallback callback);
+
+  using CharCallback = std::function<void(int)>;
+  void SetCharCallback(CharCallback callback);
 private:
   static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
   static void CursorposCallback(GLFWwindow *window, double xpos, double ypos);
   static void MouseButtonInternalCallback(GLFWwindow *window, int button, int actions, int modes);
   static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+  static void KeyCharCallback(GLFWwindow *window, unsigned int codepoint);
 
   void RecreateSwapChain();
 
@@ -73,6 +77,7 @@ private:
   CursorPosCallback m_userCursorPosCallback{};
   MouseButtonCallback m_userMouseButtonCallback{};
   KeyboardCallback m_userKeyboardCallback{};
+  CharCallback m_userCharCallback{};
 };
 
 }
