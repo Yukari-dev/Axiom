@@ -21,6 +21,7 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
   glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
   glfwSetCursorPosCallback(window, CursorposCallback);
   glfwSetMouseButtonCallback(window, MouseButtonInternalCallback);
+  glfwSetKeyCallback(window, KeyCallback);
   m_instance = std::make_unique<Instance>();
   m_surface = std::make_unique<Surface>(m_instance->GetInstance(), m_window);
   m_device = std::make_unique<Device>(m_instance->GetInstance(), m_surface->GetSurface());
@@ -145,6 +146,10 @@ void RhiContext::SetMouseButtonCallback(MouseButtonCallback callback) {
   m_userMouseButtonCallback = std::move(callback);
 }
 
+void RhiContext::SetKeyboardCallback(KeyboardCallback callback){
+  m_userKeyboardCallback = std::move(callback);
+}
+
 void RhiContext::FramebufferResizeCallback(GLFWwindow *window, int width, int height){
   auto* self = reinterpret_cast<RhiContext*>(glfwGetWindowUserPointer(window));
   self->m_framebufferResized = true;
@@ -160,9 +165,15 @@ void RhiContext::CursorposCallback(GLFWwindow *window, double x, double y){
 }
 
 void RhiContext::MouseButtonInternalCallback(GLFWwindow *window, int button, int actions, int modes){
-  auto *self = static_cast<RhiContext*>(glfwGetWindowUserPointer(window));
+  auto *self = reinterpret_cast<RhiContext*>(glfwGetWindowUserPointer(window));
   if (self && self->m_userMouseButtonCallback)
     self->m_userMouseButtonCallback(button, actions, modes);
+}
+
+void RhiContext::KeyCallback(GLFWwindow *window, int key, int scancode, int actions, int mods){
+  auto *self = reinterpret_cast<RhiContext*>(glfwGetWindowUserPointer(window));
+  if(self && self->m_userKeyboardCallback)
+    self->m_userKeyboardCallback(key, scancode, actions, mods);
 }
 
 Device& RhiContext::GetDeviceObject() const { return *m_device; }
