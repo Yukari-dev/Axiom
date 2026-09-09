@@ -1,5 +1,4 @@
 #include <axiom.h>
-#include <iostream>
 #include <string>
 
 int main(int ac, char **av) {
@@ -40,7 +39,7 @@ int main(int ac, char **av) {
       renderer.ChangeDefautlFont(fontSize);
     }
 
-    std::string text = std::to_string(Axiom::Clock::GetDeltaTime()) + "ms";
+    std::string text = std::to_string(1 / Axiom::Clock::GetDeltaTime()) + "ms";
     glm::vec2 textSize = renderer.MeasureText(text, 1);
     renderer.DrawText(text, {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 1);
   
