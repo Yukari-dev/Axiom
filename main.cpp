@@ -1,4 +1,6 @@
 #include <axiom.h>
+#include <iostream>
+#include <string>
 
 int main(int ac, char **av) {
   Axiom::ContextGuard axiom;
@@ -11,6 +13,7 @@ int main(int ac, char **av) {
   renderer.SetDefaultFont("fonts/JetBrainsMono-Regular.ttf", fontSize);
 
   while (!window.ShouldClose()){
+    Axiom::Clock::Tick();
     window.PollEvents();
     input.Update();
 
@@ -37,8 +40,9 @@ int main(int ac, char **av) {
       renderer.ChangeDefautlFont(fontSize);
     }
 
-    glm::vec2 textSize = renderer.MeasureText("Hello world", 1);
-    renderer.DrawText("Hello world", {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 1);
+    std::string text = std::to_string(Axiom::Clock::GetDeltaTime()) + "ms";
+    glm::vec2 textSize = renderer.MeasureText(text, 1);
+    renderer.DrawText(text, {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 1);
   
     renderer.End();
     rhi.EndFrame();

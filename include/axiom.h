@@ -4,6 +4,7 @@
 #include "rhiContext.hpp"
 #include "renderer2d.hpp"
 #include "fontRenderer.hpp"
+#include "utils.hpp"
 
 namespace Axiom{
 

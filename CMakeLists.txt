@@ -62,6 +62,7 @@ target_include_directories(axiom
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/platform/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/renderer2d/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/rhi/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/utils/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   PRIVATE
     ${GEN_SHADER_DIR}
