@@ -113,7 +113,6 @@ inline T InBounce(T t) {
   return static_cast<T>(1) - OutBounce(static_cast<T>(1) - t);
 }
 
-// Generic ease resolver
 template <typename T> requires std::is_floating_point_v<T>
 inline T Evaluate(T t, EaseType ease) {
   switch (ease) {

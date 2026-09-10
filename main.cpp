@@ -1,4 +1,5 @@
 #include <axiom.h>
+#include "colors.hpp"
 #include <string>
 
 int main(int ac, char **av) {
@@ -23,10 +24,10 @@ int main(int ac, char **av) {
     renderer.Begin();
       
     glm::vec3 color{0};
-    glm::vec3 textColor{1};
+    glm::vec3 textColor{Axiom::HexToRgb("#FF1301")};
     if(input.IsMouseButtonDown(Axiom::MouseButton::LEFT)){
       color = {1, 1, 1};
-      textColor = {0, 0, 0};
+      textColor = Axiom::HexToRgb("0x13F1AC");
     }
     renderer.DrawRect({0, 0}, {1200, 600}, color);
   
