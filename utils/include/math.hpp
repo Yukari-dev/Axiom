@@ -113,6 +113,14 @@ inline T InBounce(T t) {
   return static_cast<T>(1) - OutBounce(static_cast<T>(1) - t);
 }
 
+template <typename T>
+requires std::is_floating_point_v<T>
+inline T InOutBounce(T t) {
+  return t < static_cast<T>(0.5) ? static_cast<T>(0.5) * InBounce(t * static_cast<T>(2))
+  : static_cast<T>(0.5) * OutBounce(t * static_cast<T>(2) - static_cast<T>(1))
+  + static_cast<T>(0.5);
+}
+
 template <typename T> requires std::is_floating_point_v<T>
 inline T Evaluate(T t, EaseType ease) {
   switch (ease) {
@@ -127,6 +135,7 @@ inline T Evaluate(T t, EaseType ease) {
     case EaseType::InOutSine:  return InOutSine(t);
     case EaseType::InBounce:   return InBounce(t);
     case EaseType::OutBounce:  return OutBounce(t);
+    case EaseType::InOutBounce:return InOutBounce(t);
     case EaseType::Linear:
     default:                   return t;
   }
