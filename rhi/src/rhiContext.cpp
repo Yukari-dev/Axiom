@@ -36,22 +36,25 @@ RhiContext::RhiContext(GLFWwindow *window, int width, int height) : m_window(win
     m_device->GetDevice(), m_swapChain->GetImageViews(), m_swapChain->GetExtent(), m_renderPass->GetRenderPass()
   );
   m_commandPool = std::make_unique<CommandPool>(m_device->GetDevice(), m_device->GetGraphicsQueueFamily());
-  m_commandBuffer = std::make_unique<CommandBuffer>(m_device->GetDevice(), m_commandPool->GetHandler());
   m_syncObjects = std::make_unique<SyncObjects>(
     m_device->GetDevice(), 
-    static_cast<uint32_t>(m_swapChain->GetImageViews().size())
+    static_cast<uint32_t>(m_swapChain->GetImageViews().size()),
+    MAX_FRAMES_IN_FLIGHT
   );
+  m_commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+  for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    m_commandBuffers[i] = std::make_unique<CommandBuffer>(m_device->GetDevice(), m_commandPool->GetHandler());
 }
 
 RhiContext::~RhiContext() = default;
 
 void RhiContext::BeginFrame(){
-  m_inFlightFence = m_syncObjects->GetFence();
+  m_inFlightFence = m_syncObjects->GetFence(m_currentFrame);
   VkDevice device = m_device->GetDevice();
   vkWaitForFences(device, 1, &m_inFlightFence, VK_TRUE, UINT64_MAX);
   vkResetFences(device, 1, &m_inFlightFence);
   VkResult result = vkAcquireNextImageKHR(
-    device, m_swapChain->GetSwapChain(), UINT64_MAX, m_syncObjects->GetImageAvailable(),
+    device, m_swapChain->GetSwapChain(), UINT64_MAX, m_syncObjects->GetImageAvailable(m_currentFrame),
     VK_NULL_HANDLE, &m_imageIndex
   );
 
@@ -61,28 +64,32 @@ void RhiContext::BeginFrame(){
   } else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
     throw std::runtime_error("Failed to acquire swap chain image.");
 
-  vkResetCommandBuffer(m_commandBuffer->GetHandler(), 0);
-  m_commandBuffer->Begin();
-  m_commandBuffer->BeginRenderPass(
+  CommandBuffer& cmd = *m_commandBuffers[m_currentFrame];
+  vkResetCommandBuffer(cmd.GetHandler(), 0);
+  cmd.Begin();
+  cmd.BeginRenderPass(
     m_renderPass->GetRenderPass(), m_framebuffer->GetFramebuffer(m_imageIndex),
     m_swapChain->GetExtent()
   );
-  m_commandBuffer->SetViewport(m_swapChain->GetExtent());
-  m_commandBuffer->SetScissor(m_swapChain->GetExtent());
+  cmd.SetViewport(m_swapChain->GetExtent());
+  cmd.SetScissor(m_swapChain->GetExtent());
 }
 
 void RhiContext::EndFrame(){
-  vkCmdEndRenderPass(m_commandBuffer->GetHandler());
-  m_commandBuffer->End();
+  CommandBuffer& cmd = *m_commandBuffers[m_currentFrame];
+  vkCmdEndRenderPass(cmd.GetHandler());
+  cmd.End();
+
   VkSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  VkSemaphore waitSemaphores[] = {m_syncObjects->GetImageAvailable()};
+
+  VkSemaphore waitSemaphores[] = {m_syncObjects->GetImageAvailable(m_currentFrame)};
   VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
   submitInfo.waitSemaphoreCount = 1;
   submitInfo.pWaitSemaphores = waitSemaphores;
   submitInfo.pWaitDstStageMask = waitStages;
   submitInfo.commandBufferCount = 1;
-  VkCommandBuffer commandBuffer = m_commandBuffer->GetHandler();
+  VkCommandBuffer commandBuffer = cmd.GetHandler();
   submitInfo.pCommandBuffers = &commandBuffer;
 
   VkSemaphore signalSemaphores[] = {m_syncObjects->GetRenderFinished(m_imageIndex)};
@@ -108,6 +115,8 @@ void RhiContext::EndFrame(){
     RecreateSwapChain();
   } else if (result != VK_SUCCESS)
     throw std::runtime_error("Failed to present swap chain image");
+
+  m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void RhiContext::WaitIdle(){
@@ -189,7 +198,7 @@ void RhiContext::KeyCharCallback(GLFWwindow *window, unsigned int codepoint){
 
 Device& RhiContext::GetDeviceObject() const { return *m_device; }
 CommandPool& RhiContext::GetCommandPoolObject() const { return *m_commandPool; }
-CommandBuffer& RhiContext::GetCommandBufferObject() const { return *m_commandBuffer; }
+CommandBuffer& RhiContext::GetCommandBufferObject() const { return *m_commandBuffers[m_currentFrame]; }
 RenderPass& RhiContext::GetRenderPassObject() const { return *m_renderPass; }
 SwapChain& RhiContext::GetSwapChainObject() const { return *m_swapChain; }
 Framebuffer& RhiContext::GetFramebufferObject() const { return *m_framebuffer; }

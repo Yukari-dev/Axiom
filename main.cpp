@@ -1,4 +1,5 @@
 #include <axiom.h>
+#include <iostream>
 #include <string>
 
 int main(int ac, char **av) {
@@ -8,9 +9,10 @@ int main(int ac, char **av) {
   Axiom::Input input(window.GetHandler());
   Axiom::RhiContext rhi(window.GetHandler(), window.GetWidth(), window.GetHeight());
   Axiom::Renderer2D renderer(rhi);
-  float fontSize = 64.0f;
+  float fontSize{64.0f};
   renderer.SetDefaultFont("fonts/JetBrainsMono-Regular.ttf", fontSize);
 
+  float maxFps = 0.0f;
   while (!window.ShouldClose()){
     Axiom::Clock::Tick();
     window.PollEvents();
@@ -23,7 +25,7 @@ int main(int ac, char **av) {
     renderer.Begin();
       
     glm::vec3 color{0};
-    glm::vec3 textColor{Axiom::HexToRgb("#FF1301")};
+    glm::vec3 textColor{Axiom::HexToRgb("#FFFFFF")};
     if(input.IsMouseButtonDown(Axiom::MouseButton::LEFT)){
       color = {1, 1, 1};
       textColor = Axiom::HexToRgb("0x13F1AC");
@@ -39,10 +41,18 @@ int main(int ac, char **av) {
       renderer.ChangeDefautlFont(fontSize);
     }
 
-    std::string text = std::to_string(1 / Axiom::Clock::GetDeltaTime()) + "ms";
+    float dt = Axiom::Clock::GetDeltaTime();
+    float currentFps = (dt > 0.00001f) ? (1.0f / dt) : 0.0f;
+    std::string text = std::to_string(currentFps) + "fps";
     glm::vec2 textSize = renderer.MeasureText(text, 1);
-    renderer.DrawText(text, {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 1, 0.3f);
+    renderer.DrawText(text, {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 1);
+    if(currentFps > maxFps)
+      maxFps = currentFps;
   
+    std::string maxFpsText = "MAX FPS: " + std::to_string(maxFps) + "fps";
+    glm::vec2 fpsTextSize = renderer.MeasureText(maxFpsText, 0.4f);
+    renderer.DrawText(maxFpsText, {600 - (fpsTextSize.x / 2), 350}, textColor, 0.4f);
+
     renderer.End();
     rhi.EndFrame();
   }

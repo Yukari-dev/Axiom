@@ -2,6 +2,7 @@
 #include <functional>
 #include <memory>
 #include <cstdint>
+#include <vector>
 
 struct GLFWwindow;
 typedef struct VkFence_T* VkFence;
@@ -64,6 +65,9 @@ private:
   VkFence m_inFlightFence{};
   bool m_framebufferResized{false};
   uint32_t m_imageIndex{0};
+  static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+  uint32_t m_currentFrame{0};
+  std::vector<std::unique_ptr<CommandBuffer>> m_commandBuffers;
   std::unique_ptr<Instance> m_instance{nullptr};
   std::unique_ptr<Surface> m_surface{nullptr};
   std::unique_ptr<Device> m_device{nullptr};
@@ -71,7 +75,6 @@ private:
   std::unique_ptr<RenderPass> m_renderPass{nullptr};
   std::unique_ptr<Framebuffer> m_framebuffer{nullptr};
   std::unique_ptr<CommandPool> m_commandPool{nullptr};
-  std::unique_ptr<CommandBuffer> m_commandBuffer{nullptr};
   std::unique_ptr<SyncObjects> m_syncObjects{nullptr};
   ResizeCallback m_userResizeCallback{};
   CursorPosCallback m_userCursorPosCallback{};
