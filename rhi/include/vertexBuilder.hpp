@@ -34,6 +34,13 @@ public:
     PushFloat(v.z);
   }
 
+  void PushVec4(glm::vec4 v){
+    PushFloat(v.x);
+    PushFloat(v.y);
+    PushFloat(v.z);
+    PushFloat(v.w);
+  }
+
   const void* Data() const { return m_data.data(); }
   size_t Size() const { return m_data.size(); }
   void Clear() { m_data.clear(); }

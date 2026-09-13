@@ -133,7 +133,7 @@ void FontRenderer::DrawText(
   glm::vec2 position, 
   FontHandle fontHandle, 
   glm::vec3 color, 
-  float scale
+  float scale, float alpha
 ) {
   Font& font = GetFontFromHandle(fontHandle);
   glm::vec2 cursor = position;
@@ -163,7 +163,7 @@ void FontRenderer::DrawText(
       glyph.uvMax,
       color,
       font.atlasTexture,
-      m_sdfPipeline
+      m_sdfPipeline, alpha
     );
 
     cursor.x += glyph.advance * scale;
@@ -172,9 +172,9 @@ void FontRenderer::DrawText(
 
 void FontRenderer::DrawText(
   const std::string& text, glm::vec2 position, glm::vec3 color, 
-  float scale
+  float scale, float alpha
 ) {
-  DrawText(text, position, m_defaultFontHandle, color, scale);
+  DrawText(text, position, m_defaultFontHandle, color, scale, alpha);
 }
 
 glm::vec2 FontRenderer::MeasureText(const std::string& text, FontHandle fontHandle, float scale) {

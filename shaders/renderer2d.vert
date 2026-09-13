@@ -5,9 +5,10 @@ layout(binding = 0) uniform UBO {
 } ubo;
 layout(location = 0) in vec2 inPos;
 layout(location = 1) in vec3 inCol;
-layout(location = 0) out vec3 aColor;
+layout(location = 2) in float inAlpha;
+layout(location = 0) out vec4 aColor;
 
 void main(){
   gl_Position = ubo.projection * vec4(inPos, 0.0, 1.0);
-  aColor = inCol;
+  aColor = vec4(inCol, inAlpha);
 }

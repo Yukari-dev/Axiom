@@ -21,6 +21,7 @@
 #include "texture2d.vert.spv.h"
 #include "texture2d.frag.spv.h"
 #include "vertexBuilder.hpp"
+#include "vertexLayout.hpp"
 
 namespace Axiom {
 
@@ -76,10 +77,10 @@ struct Renderer2D::Impl {
 
   explicit Impl(RhiContext& ctx) : m_rhi(ctx) {
     m_descriptorSetLayout = std::make_unique<DescriptorSetLayout>(m_rhi.GetDeviceObject().GetDevice());
-  
 
     m_rectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
     m_rectLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
+    m_rectLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
     m_pipeline = std::make_unique<Pipeline>(
       m_rhi.GetDeviceObject().GetDevice(), m_rhi.GetSwapChainObject().GetExtent(), m_rhi.GetRenderPassObject().GetRenderPass(),
       m_descriptorSetLayout->GetDescriptorSetLayout(),
@@ -90,6 +91,7 @@ struct Renderer2D::Impl {
 
     m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
     m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
+    m_roundedRectLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
     m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
     m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
     m_roundedRectLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
@@ -103,6 +105,7 @@ struct Renderer2D::Impl {
 
     m_textureLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
     m_textureLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
+    m_textureLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
     m_textureLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
     m_defaultTexture = std::make_unique<Texture>(
       m_rhi.GetDeviceObject(), m_rhi.GetCommandPoolObject().GetHandler(), "default.jpg"
@@ -233,11 +236,11 @@ void Renderer2D::Begin() {
   }
 }
 
-void Renderer2D::DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 col) {
-  DrawRect({pos.x, pos.y, size.x, size.y}, col);
+void Renderer2D::DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 col, float alpha) {
+  DrawRect({pos.x, pos.y, size.x, size.y}, col, alpha);
 }
 
-void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col) {
+void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col, float alpha) {
   uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
   VkDescriptorSet defaultSet = m_impl->m_descriptorSets[imgIdx]->GetSet();
   Batch& batch = m_impl->GetBatch(m_impl->m_pipeline.get(), defaultSet, m_impl->m_rectLayout);
@@ -246,15 +249,19 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col) {
 
   batch.vertexData.PushVec2({rec.x, rec.y});
   batch.vertexData.PushVec3(col);
+  batch.vertexData.PushFloat(alpha);
 
   batch.vertexData.PushVec2({rec.x + rec.width, rec.y});
   batch.vertexData.PushVec3(col);
+  batch.vertexData.PushFloat(alpha);
 
   batch.vertexData.PushVec2({rec.x + rec.width, rec.y + rec.height});
   batch.vertexData.PushVec3(col);
+  batch.vertexData.PushFloat(alpha);
 
   batch.vertexData.PushVec2({rec.x, rec.y + rec.height});
   batch.vertexData.PushVec3(col);
+  batch.vertexData.PushFloat(alpha);
 
   batch.indices.push_back(base + 0);
   batch.indices.push_back(base + 1);
@@ -264,11 +271,11 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col) {
   batch.indices.push_back(base + 0);
 }
 
-void Renderer2D::DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, PipelineHandle shaderHandle) {
+void Renderer2D::DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, PipelineHandle shaderHandle, float alpha) {
   DrawRect({pos.x, pos.y, size.x, size.y}, color, shaderHandle);
 }
 
-void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col, PipelineHandle shaderHandle) {
+void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col, PipelineHandle shaderHandle, float alpha) {
   uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
   VkDescriptorSet defaultSet = m_impl->m_descriptorSets[imgIdx]->GetSet();
   Pipeline& pipeline = m_impl->GetPipelineFromHandle(shaderHandle);
@@ -278,6 +285,7 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col, PipelineHandle shaderHan
   auto pushVertex = [&](glm::vec2 pos, glm::vec2 uv) {
     batch.vertexData.PushVec2(pos);
     batch.vertexData.PushVec3(col);
+    batch.vertexData.PushFloat(alpha);
     batch.vertexData.PushFloat(10.0f);
     batch.vertexData.PushVec2(uv);
   };
@@ -295,11 +303,11 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec3 col, PipelineHandle shaderHan
   batch.indices.push_back(base + 0);
 }
 
-void Renderer2D::DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, TextureHandle textureHandle) {
-  DrawRect({pos.x, pos.y, size.x, size.y}, color, textureHandle);
+void Renderer2D::DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, TextureHandle textureHandle, float alpha) {
+  DrawRect({pos.x, pos.y, size.x, size.y}, color, textureHandle, alpha);
 }
 
-void Renderer2D::DrawRect(Rectangle rec, glm::vec3 color, TextureHandle textureHandle) {
+void Renderer2D::DrawRect(Rectangle rec, glm::vec3 color, TextureHandle textureHandle, float alpha) {
   Texture& texture = m_impl->GetTextureFromHandle(textureHandle);
   uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
   VkDescriptorSet texSet = m_impl->GetOrCreateTextureSet(texture, imgIdx);
@@ -310,6 +318,7 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec3 color, TextureHandle textureH
   auto pushVertex = [&](glm::vec2 pos, glm::vec2 uv) {
     batch.vertexData.PushVec2(pos);
     batch.vertexData.PushVec3(color);
+    batch.vertexData.PushFloat(alpha);
     batch.vertexData.PushVec2(uv);
   };
 
@@ -326,11 +335,11 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec3 color, TextureHandle textureH
   batch.indices.push_back(base + 0);
 }
 
-void Renderer2D::DrawSprite(glm::vec2 pos, glm::vec2 size, glm::vec3 tint) {
-  DrawSprite({pos.x, pos.y, size.x, size.y}, tint);
+void Renderer2D::DrawSprite(glm::vec2 pos, glm::vec2 size, glm::vec3 tint, float alpha) {
+  DrawSprite({pos.x, pos.y, size.x, size.y}, tint, alpha);
 }
 
-void Renderer2D::DrawSprite(Rectangle rec, glm::vec3 tint) {
+void Renderer2D::DrawSprite(Rectangle rec, glm::vec3 tint, float alpha) {
   uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
   VkDescriptorSet textureSet = m_impl->m_textureDescriptorSets[imgIdx]->GetSet();
   Batch& batch = m_impl->GetBatch(m_impl->m_texturePipeline.get(), textureSet, m_impl->m_textureLayout);
@@ -340,6 +349,7 @@ void Renderer2D::DrawSprite(Rectangle rec, glm::vec3 tint) {
   auto pushVertex = [&](glm::vec2 pos, glm::vec2 uv) {
     batch.vertexData.PushVec2(pos);
     batch.vertexData.PushVec3(tint);
+    batch.vertexData.PushFloat(alpha);
     batch.vertexData.PushVec2(uv);
   };
 
@@ -356,7 +366,7 @@ void Renderer2D::DrawSprite(Rectangle rec, glm::vec3 tint) {
   batch.indices.push_back(base + 0);
 }
 
-void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle) {
+void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle, float alpha) {
   Texture& texture = m_impl->GetTextureFromHandle(textureHandle);
   uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
   VkDescriptorSet texSet = m_impl->GetOrCreateTextureSet(texture, imgIdx);
@@ -367,6 +377,7 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::
   auto pushVertex = [&](glm::vec2 pos, glm::vec2 uv) {
     batch.vertexData.PushVec2(pos);
     batch.vertexData.PushVec3(color);
+    batch.vertexData.PushFloat(alpha);
     batch.vertexData.PushVec2(uv);
   };
 
@@ -383,7 +394,7 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::
   batch.indices.push_back(base + 0);
 }
 
-void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle, PipelineHandle pipelineHandle) {
+void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle, PipelineHandle pipelineHandle, float alpha) {
   Pipeline& pipeline = m_impl->GetPipelineFromHandle(pipelineHandle);
   Texture& texture = m_impl->GetTextureFromHandle(textureHandle);
 
@@ -396,6 +407,7 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::
   auto pushVertex = [&](glm::vec2 pos, glm::vec2 uv) {
     batch.vertexData.PushVec2(pos);
     batch.vertexData.PushVec3(color);
+    batch.vertexData.PushFloat(alpha);
     batch.vertexData.PushVec2(uv);
   };
 
@@ -412,14 +424,14 @@ void Renderer2D::DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::
   batch.indices.push_back(base + 0);
 }
 
-void Renderer2D::DrawRectLine(Rectangle rec, float thickness, glm::vec3 color){
-  DrawLine({rec.x, rec.y}, {rec.x + rec.width, rec.y}, thickness, color);
-  DrawLine({rec.x + rec.width, rec.y}, {rec.x + rec.width, rec.y + rec.height}, thickness, color);
-  DrawLine({rec.x, rec.y}, {rec.x, rec.y + rec.height}, thickness, color);
-  DrawLine({rec.x, rec.y + rec.height}, {rec.x + rec.width, rec.y + rec.height}, thickness, color);
+void Renderer2D::DrawRectLine(Rectangle rec, float thickness, glm::vec3 color, float alpha){
+  DrawLine({rec.x, rec.y}, {rec.x + rec.width, rec.y}, thickness, color, alpha);
+  DrawLine({rec.x + rec.width, rec.y}, {rec.x + rec.width, rec.y + rec.height}, thickness, color, alpha);
+  DrawLine({rec.x, rec.y}, {rec.x, rec.y + rec.height}, thickness, color, alpha);
+  DrawLine({rec.x, rec.y + rec.height}, {rec.x + rec.width, rec.y + rec.height}, thickness, color, alpha);
 }
 
-void Renderer2D::DrawPolygon(const std::vector<glm::vec2>& points, glm::vec3 color){
+void Renderer2D::DrawPolygon(const std::vector<glm::vec2>& points, glm::vec3 color, float alpha){
   if(points.size() < 3) return;
   uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
   VkDescriptorSet defaultSet = m_impl->m_descriptorSets[imgIdx]->GetSet();
@@ -430,6 +442,7 @@ void Renderer2D::DrawPolygon(const std::vector<glm::vec2>& points, glm::vec3 col
   for(const auto& point : points){
     batch.vertexData.PushVec2(point);
     batch.vertexData.PushVec3(color);
+    batch.vertexData.PushFloat(alpha);
   }
   
   for(uint16_t i = 1; i + 1 < points.size(); i++){
@@ -439,11 +452,11 @@ void Renderer2D::DrawPolygon(const std::vector<glm::vec2>& points, glm::vec3 col
   }
 }
 
-void Renderer2D::DrawRoundedRect(glm::vec2 pos, glm::vec2 size, float roundness, glm::vec3 color) {
-  DrawRoundedRect({pos.x, pos.y, size.x, size.y}, roundness, color);
+void Renderer2D::DrawRoundedRect(glm::vec2 pos, glm::vec2 size, float roundness, glm::vec3 color, float alpha) {
+  DrawRoundedRect({pos.x, pos.y, size.x, size.y}, roundness, color, alpha);
 }
 
-void Renderer2D::DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color) {
+void Renderer2D::DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color, float alpha) {
   uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
   VkDescriptorSet defaultSet = m_impl->m_descriptorSets[imgIdx]->GetSet();
   Batch& batch = m_impl->GetBatch(m_impl->m_roundedRectPipeline.get(), defaultSet, m_impl->m_roundedRectLayout);
@@ -456,6 +469,7 @@ void Renderer2D::DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color
   auto pushVertex = [&](glm::vec2 pos, glm::vec2 localUV) {
     batch.vertexData.PushVec2(pos);
     batch.vertexData.PushVec3(color);
+    batch.vertexData.PushFloat(alpha);
     batch.vertexData.PushVec2(localUV);
     batch.vertexData.PushVec2(size);
     batch.vertexData.PushFloat(roundness);
@@ -474,7 +488,7 @@ void Renderer2D::DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color
   batch.indices.push_back(base + 0);
 }
 
-void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 color) {
+void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 color, float alpha) {
   uint32_t imgIdx = m_impl->m_rhi.GetImageIndex();
   VkDescriptorSet defaultSet = m_impl->m_descriptorSets[imgIdx]->GetSet();
   Batch& batch = m_impl->GetBatch(m_impl->m_pipeline.get(), defaultSet, m_impl->m_rectLayout);
@@ -487,15 +501,19 @@ void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 c
 
   batch.vertexData.PushVec2(from - offset);
   batch.vertexData.PushVec3(color);
+  batch.vertexData.PushFloat(alpha);
 
   batch.vertexData.PushVec2(to - offset);
   batch.vertexData.PushVec3(color);
+  batch.vertexData.PushFloat(alpha);
 
   batch.vertexData.PushVec2(to + offset);
   batch.vertexData.PushVec3(color);
+  batch.vertexData.PushFloat(alpha);
 
   batch.vertexData.PushVec2(from + offset);
   batch.vertexData.PushVec3(color);
+  batch.vertexData.PushFloat(alpha);
 
   batch.indices.push_back(base + 0);
   batch.indices.push_back(base + 1);
@@ -505,20 +523,20 @@ void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 c
   batch.indices.push_back(base + 0);
 }
 
-void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, glm::vec3 color) {
-  DrawLine(from, to, 1.0f, color);
+void Renderer2D::DrawLine(glm::vec2 from, glm::vec2 to, glm::vec3 color, float alpha) {
+  DrawLine(from, to, 1.0f, color, alpha);
 }
 
 void Renderer2D::DrawText(
   const std::string& text, glm::vec2 position, FontHandle fontHandle, 
-  glm::vec3 color, float scale){
-  m_impl->m_fontRenderer->DrawText(text, position, fontHandle, color, scale);
+  glm::vec3 color, float scale, float alpha){
+  m_impl->m_fontRenderer->DrawText(text, position, fontHandle, color, scale, alpha);
 }
 
 void Renderer2D::DrawText(
   const std::string& text, glm::vec2 position, 
-  glm::vec3 color, float scale){
-  m_impl->m_fontRenderer->DrawText(text, position, color, scale);
+  glm::vec3 color, float scale, float alpha){
+  m_impl->m_fontRenderer->DrawText(text, position, color, scale, alpha);
 }
 
 glm::vec2 Renderer2D::MeasureText(const std::string& text, FontHandle fontHandle, float scale){

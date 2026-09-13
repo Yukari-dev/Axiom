@@ -41,7 +41,7 @@ int main(int ac, char **av) {
 
     std::string text = std::to_string(1 / Axiom::Clock::GetDeltaTime()) + "ms";
     glm::vec2 textSize = renderer.MeasureText(text, 1);
-    renderer.DrawText(text, {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 1);
+    renderer.DrawText(text, {600 - (textSize.x / 2), 300 - (textSize.y / 2)}, textColor, 1, 0.3f);
   
     renderer.End();
     rhi.EndFrame();

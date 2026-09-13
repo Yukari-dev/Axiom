@@ -35,35 +35,35 @@ public:
 
   void Begin();
 
-  void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color);
-  void DrawRect(Rectangle rec, glm::vec3 color);
-  void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, PipelineHandle shaderHandle);
-  void DrawRect(Rectangle rec, glm::vec3 color, PipelineHandle shaderHandle);
-  void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, TextureHandle textureHandle);
-  void DrawRect(Rectangle rec, glm::vec3 color, TextureHandle textureHandle);
-  void DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle);
-  void DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle, PipelineHandle pipelineHandle);
-  void DrawRectLine(Rectangle rec, float thickness, glm::vec3 color);
+  void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, float alpha = 1.0f);
+  void DrawRect(Rectangle rec, glm::vec3 color, float alpha = 1.0f);
+  void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, PipelineHandle shaderHandle, float alpha = 1.0f);
+  void DrawRect(Rectangle rec, glm::vec3 color, PipelineHandle shaderHandle, float alpha = 1.0f);
+  void DrawRect(glm::vec2 pos, glm::vec2 size, glm::vec3 color, TextureHandle textureHandle, float alpha = 1.0f);
+  void DrawRect(Rectangle rec, glm::vec3 color, TextureHandle textureHandle, float alpha = 1.0f);
+  void DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle, float alpha = 1.0f);
+  void DrawRect(Rectangle rec, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec3 color, TextureHandle textureHandle, PipelineHandle pipelineHandle, float alpha = 1.0f);
+  void DrawRectLine(Rectangle rec, float thickness, glm::vec3 color, float alpha = 1.0f);
 
-  void DrawPolygon(const std::vector<glm::vec2>& points, glm::vec3 color);
+  void DrawPolygon(const std::vector<glm::vec2>& points, glm::vec3 color, float alpha = 1.0f);
 
-  void DrawSprite(glm::vec2 pos, glm::vec2 size, glm::vec3 tint);
-  void DrawSprite(Rectangle rec, glm::vec3 tint);
+  void DrawSprite(glm::vec2 pos, glm::vec2 size, glm::vec3 tint, float alpha = 1.0f);
+  void DrawSprite(Rectangle rec, glm::vec3 tint, float alpha = 1.0f);
 
-  void DrawRoundedRect(glm::vec2 pos, glm::vec2 size, float roundness, glm::vec3 color);
-  void DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color);
+  void DrawRoundedRect(glm::vec2 pos, glm::vec2 size, float roundness, glm::vec3 color, float alpha = 1.0f);
+  void DrawRoundedRect(Rectangle rec, float roundness, glm::vec3 color, float alpha = 1.0f);
 
-  void DrawLine(glm::vec2 from, glm::vec2 to, glm::vec3 color);
-  void DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 color);
+  void DrawLine(glm::vec2 from, glm::vec2 to, glm::vec3 color, float alpha = 1.0f);
+  void DrawLine(glm::vec2 from, glm::vec2 to, float thick, glm::vec3 color, float alpha = 1.0f);
 
   void DrawText(
     const std::string& text, glm::vec2 position, FontHandle fontHandle, 
-    glm::vec3 color = glm::vec3(1.0f), float scale = 1.0f
+    glm::vec3 color = glm::vec3(1.0f), float scale = 1.0f, float alpha = 1.0f
   );
 
   void DrawText(
     const std::string& text, glm::vec2 position, 
-    glm::vec3 color = glm::vec3(1.0f), float scale = 1.0f
+    glm::vec3 color = glm::vec3(1.0f), float scale = 1.0f, float alpha = 1.0f
   );
 
   glm::vec2 MeasureText(const std::string& text, FontHandle fontHandle, float scale = 1.0f);

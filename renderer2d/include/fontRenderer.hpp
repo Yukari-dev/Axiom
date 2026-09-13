@@ -41,14 +41,14 @@ public:
     glm::vec2 position, 
     FontHandle fontHandle, 
     glm::vec3 color = glm::vec3(1.0f), 
-    float scale = 1.0f
+    float scale = 1.0f, float alpha = 1.0f
   );
 
   void DrawText(
     const std::string& text, 
     glm::vec2 position, 
     glm::vec3 color = glm::vec3(1.0f), 
-    float scale = 1.0f
+    float scale = 1.0f, float alpha = 1.0f
   );
 
   glm::vec2 MeasureText(const std::string& text, FontHandle fontHandle, float scale = 1.0f);
