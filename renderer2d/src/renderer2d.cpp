@@ -78,9 +78,9 @@ struct Renderer2D::Impl {
   explicit Impl(RhiContext& ctx) : m_rhi(ctx) {
     m_descriptorSetLayout = std::make_unique<DescriptorSetLayout>(m_rhi.GetDeviceObject().GetDevice());
 
-    m_rectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
-    m_rectLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
-    m_rectLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
+    m_rectLayout.AddAttribute(VertexFormat::Float2);
+    m_rectLayout.AddAttribute(VertexFormat::Float3);
+    m_rectLayout.AddAttribute(VertexFormat::Float);
     m_pipeline = std::make_unique<Pipeline>(
       m_rhi.GetDeviceObject().GetDevice(), m_rhi.GetSwapChainObject().GetExtent(), m_rhi.GetRenderPassObject().GetRenderPass(),
       m_descriptorSetLayout->GetDescriptorSetLayout(),
@@ -89,12 +89,12 @@ struct Renderer2D::Impl {
       m_rectLayout
     );
 
-    m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
-    m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
-    m_roundedRectLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
-    m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
-    m_roundedRectLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
-    m_roundedRectLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
+    m_roundedRectLayout.AddAttribute(VertexFormat::Float2);
+    m_roundedRectLayout.AddAttribute(VertexFormat::Float3);
+    m_roundedRectLayout.AddAttribute(VertexFormat::Float);
+    m_roundedRectLayout.AddAttribute(VertexFormat::Float2);
+    m_roundedRectLayout.AddAttribute(VertexFormat::Float2);
+    m_roundedRectLayout.AddAttribute(VertexFormat::Float);
     m_roundedRectPipeline = std::make_unique<Pipeline>(
       m_rhi.GetDeviceObject().GetDevice(), m_rhi.GetSwapChainObject().GetExtent(), m_rhi.GetRenderPassObject().GetRenderPass(),
       m_descriptorSetLayout->GetDescriptorSetLayout(),
@@ -103,10 +103,10 @@ struct Renderer2D::Impl {
       m_roundedRectLayout
     );
 
-    m_textureLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
-    m_textureLayout.AddAttribute(VK_FORMAT_R32G32B32_SFLOAT);
-    m_textureLayout.AddAttribute(VK_FORMAT_R32_SFLOAT);
-    m_textureLayout.AddAttribute(VK_FORMAT_R32G32_SFLOAT);
+    m_textureLayout.AddAttribute(VertexFormat::Float2);
+    m_textureLayout.AddAttribute(VertexFormat::Float3);
+    m_textureLayout.AddAttribute(VertexFormat::Float);
+    m_textureLayout.AddAttribute(VertexFormat::Float2);
     m_defaultTexture = std::make_unique<Texture>(
       m_rhi.GetDeviceObject(), m_rhi.GetCommandPoolObject().GetHandler(), "default.jpg"
     );
